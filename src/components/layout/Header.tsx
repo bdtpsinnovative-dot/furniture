@@ -38,13 +38,13 @@ export function Header({ dynamic = false }: { dynamic?: boolean }) {
           : 'fixed top-0 left-0 bg-canvas/92 backdrop-blur-md border-b border-hairline py-3.5 px-6 md:px-20 lg:px-32 xl:px-[180px] shadow-sm'
       }`}
     >
-      <div className="max-w-[1600px] mx-auto grid grid-cols-2 md:grid-cols-3 items-center">
+      <div className="max-w-[1600px] mx-auto flex justify-between items-center relative">
 
         {/* Left: Brand Logo (Dynamic theme swap) */}
-        <div className="flex items-center">
+        <div className="flex items-center z-10">
           <Link href="/" className="flex items-center">
             <img
-              src="/Gemini_Generated_Image_xap80hxap80hxap8-Photoroom.png"
+              src="/image-Photoroom.png"
               alt="Ember & Ash Logo"
               className={`h-14 md:h-16 w-auto object-contain transition-all duration-500 ${
                 isTransparent ? 'brightness-0 invert' : ''
@@ -54,7 +54,7 @@ export function Header({ dynamic = false }: { dynamic?: boolean }) {
         </div>
 
         {/* Center: Navigation Links (Dynamic color swap) */}
-        <ul className="hidden md:flex justify-center gap-8 list-none">
+        <ul className="hidden md:flex absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 justify-center gap-8 list-none z-0">
           <li>
             <Link
               href="/collections2"
@@ -114,7 +114,7 @@ export function Header({ dynamic = false }: { dynamic?: boolean }) {
         </ul>
 
         {/* Right: Action Buttons (Dynamic color swap) */}
-        <div className="flex justify-end items-center gap-4">
+        <div className="flex justify-end items-center gap-4 z-10">
           <button
             className={`flex items-center gap-2 text-[11px] font-medium uppercase tracking-[0.05em] transition-all duration-300 ${
               isTransparent ? 'text-canvas/80 hover:text-white' : 'text-ink/80 hover:text-sage'

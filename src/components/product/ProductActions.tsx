@@ -26,7 +26,7 @@ export function ProductActions({ id, name, price }: ProductActionsProps) {
           className="hover:scale-110 transition-transform focus:outline-none"
           aria-label="Add to wishlist"
         >
-          <svg viewBox="0 0 24 24" className={`w-6 h-6 stroke-ink stroke-[1.5px] transition-colors ${isFavorite ? 'fill-ink' : 'fill-transparent'}`}>
+          <svg viewBox="0 0 24 24" className={`w-6 h-6 transition-colors ${isFavorite ? 'fill-sage stroke-sage' : 'stroke-ink fill-transparent'} stroke-[1.5px]`}>
             <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
           </svg>
         </button>

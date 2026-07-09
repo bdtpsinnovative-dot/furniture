@@ -24,10 +24,10 @@ export function ProductAccordion({ items }: { items: AccordionItem[] }) {
               className="w-full py-4 flex justify-between items-center text-left focus:outline-none group"
               onClick={() => toggle(index)}
             >
-              <span className="text-[14px] font-sans text-ink group-hover:opacity-70 transition-opacity">
+              <span className={`text-[14px] font-sans transition-colors duration-300 ${isOpen ? 'text-sage font-medium' : 'text-ink group-hover:text-sage'}`}>
                 {item.title}
               </span>
-              <span className="text-[18px] font-light text-muted transition-transform duration-300">
+              <span className={`text-[18px] font-light transition-all duration-300 ${isOpen ? 'text-sage' : 'text-muted group-hover:text-sage'}`}>
                 {isOpen ? '−' : '+'}
               </span>
             </button>

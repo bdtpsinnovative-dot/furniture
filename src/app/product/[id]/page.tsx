@@ -7,16 +7,18 @@ import { ProductGallery } from '@/components/product/ProductGallery';
 import { ProductActions } from '@/components/product/ProductActions';
 import { ProductAccordion, AccordionItem } from '@/components/product/ProductAccordion';
 import { MOCK_PRODUCTS } from '@/data/mockProducts';
-
+import { PremiumProductCard } from '@/components/collections2/PremiumProductCard';
 export default async function ProductPage(props: { params: Promise<{ id: string }> }) {
   const params = await props.params;
   const supabase = await createClient();
 
   let product: any = null;
+  let recommendedProducts: any[] = [];
 
   // Intercept mock presentation IDs
   if (params.id.startsWith('mock-')) {
     product = MOCK_PRODUCTS.find(p => p.id === params.id);
+    recommendedProducts = MOCK_PRODUCTS.filter(p => p.id !== params.id).slice(0, 8);
   } else {
     const { data, error } = await supabase
       .from('products')
@@ -26,6 +28,17 @@ export default async function ProductPage(props: { params: Promise<{ id: string 
 
     if (!error && data) {
       product = data;
+
+      // Fetch recommended products
+      const { data: recData } = await supabase
+        .from('products')
+        .select('*')
+        .neq('id', params.id)
+        .limit(8);
+        
+      if (recData) {
+        recommendedProducts = recData;
+      }
     }
   }
 
@@ -123,6 +136,41 @@ export default async function ProductPage(props: { params: Promise<{ id: string 
           </div>
 
         </div>
+
+        {/* Recommended Products */}
+        {recommendedProducts.length > 0 && (
+          <div className="mt-24 md:mt-32 pt-24 md:pt-32 pb-12 border-t border-hairline relative">
+            
+            {/* Header Section */}
+            <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-16">
+              <div className="max-w-xl">
+                <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-sage mb-4 block">
+                  Curated Collection
+                </span>
+                <h2 className="text-[28px] md:text-[36px] font-medium tracking-tight text-ink leading-tight">
+                  You May Also Like
+                </h2>
+              </div>
+              <Link 
+                href="/collections2" 
+                className="inline-flex items-center gap-3 text-[11px] font-semibold uppercase tracking-[0.1em] text-ink hover:text-sage transition-colors group pb-2 border-b border-ink/20 hover:border-sage"
+              >
+                View all pieces
+                <svg viewBox="0 0 24 24" className="w-[14px] h-[14px] stroke-current stroke-[1.5px] fill-none transition-transform duration-300 group-hover:translate-x-1">
+                  <line x1="5" y1="12" x2="19" y2="12"></line>
+                  <polyline points="12 5 19 12 12 19"></polyline>
+                </svg>
+              </Link>
+            </div>
+
+            {/* Grid */}
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-x-4 gap-y-12 md:gap-x-8 md:gap-y-16">
+              {recommendedProducts.map((p, index) => (
+                <PremiumProductCard key={p.id} product={p} index={index} />
+              ))}
+            </div>
+          </div>
+        )}
       </main>
     </div>
   );
