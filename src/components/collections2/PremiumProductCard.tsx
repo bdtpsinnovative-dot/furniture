@@ -64,7 +64,7 @@ export function PremiumProductCard({ product, index }: { product: Product; index
   const serial = `EA / ${typeCode}-0${index + 1}`;
 
   return (
-    <div className="bg-surface border border-hairline rounded-none flex flex-col relative group overflow-hidden transition-all duration-500 hover:border-sage hover:shadow-[0_12px_24px_rgba(0,0,0,0.02)]">
+    <div className="bg-surface border border-hairline rounded-none flex flex-col relative group overflow-hidden transition-all duration-500 hover:border-sage hover:shadow-[0_16px_36px_rgba(0,0,0,0.05)]">
       {/* Architectural Image Box */}
       <div className="w-full aspect-[4/3] bg-canvas flex items-center justify-center overflow-hidden relative border-b border-hairline">
         {/* Subtle hover background transition */}
@@ -115,16 +115,6 @@ export function PremiumProductCard({ product, index }: { product: Product; index
         <span className="absolute top-4 left-4 z-20 font-sans text-[9px] tracking-widest uppercase bg-sage text-white px-2.5 py-1 border border-sage font-bold">
           {serial}
         </span>
-
-        {/* ── Clockwise Drawing Borders on Hover ── */}
-        {/* Top Border (left-to-right) */}
-        <span className="absolute top-0 left-0 h-px bg-sage w-0 group-hover:w-full transition-all duration-200 ease-out z-30 pointer-events-none" />
-        {/* Right Border (top-to-bottom) */}
-        <span className="absolute top-0 right-0 w-px bg-sage h-0 group-hover:h-full transition-all duration-200 ease-out delay-200 z-30 pointer-events-none" />
-        {/* Bottom Border (right-to-left) */}
-        <span className="absolute bottom-0 right-0 h-px bg-sage w-0 group-hover:w-full transition-all duration-200 ease-out delay-400 z-30 pointer-events-none" />
-        {/* Left Border (bottom-to-top) */}
-        <span className="absolute bottom-0 left-0 w-px bg-sage h-0 group-hover:h-full transition-all duration-200 ease-out delay-600 z-30 pointer-events-none" />
       </div>
 
       {/* Meta Specs & Identity */}

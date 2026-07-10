@@ -10,10 +10,12 @@ function AsymCard({
   product,
   index,
   aspectClass = 'aspect-[4/3]',
+  hFull = false,
 }: {
   product: Product;
   index: number;
   aspectClass?: string;
+  hFull?: boolean;
 }) {
   const [hovered, setHovered] = useState(false);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
@@ -80,7 +82,7 @@ function AsymCard({
         ease: [0.16, 1, 0.3, 1], // Custom bounce/spring-like ease
         delay: (index % 3) * 0.1 // Staggering effect based on index
       }}
-      className="flex flex-col group w-full"
+      className={`flex flex-col group w-full ${hFull ? 'h-full' : ''}`}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => {
         setHovered(false);
@@ -95,7 +97,7 @@ function AsymCard({
     >
       <div
         ref={imageRef}
-        className={`relative ${aspectClass} w-full overflow-hidden cursor-pointer bg-transparent`}
+        className={`relative ${aspectClass} w-full overflow-hidden cursor-pointer bg-transparent transition-shadow duration-500 ease-out group-hover:shadow-[0_16px_36px_rgba(0,0,0,0.06)] ${hFull ? 'flex-grow' : ''}`}
       >
         <Link href={`/product/${product.id}`} className="absolute inset-0 z-20" aria-label={product.name} />
         
@@ -145,16 +147,6 @@ function AsymCard({
             ))}
           </div>
         )}
-
-        {/* ── Clockwise Drawing Borders on Hover ── */}
-        {/* Top Border (left-to-right) */}
-        <span className="absolute top-0 left-0 h-px bg-sage w-0 group-hover:w-full transition-all duration-200 ease-out z-30 pointer-events-none" />
-        {/* Right Border (top-to-bottom) */}
-        <span className="absolute top-0 right-0 w-px bg-sage h-0 group-hover:h-full transition-all duration-200 ease-out delay-200 z-30 pointer-events-none" />
-        {/* Bottom Border (right-to-left) */}
-        <span className="absolute bottom-0 right-0 h-px bg-sage w-0 group-hover:w-full transition-all duration-200 ease-out delay-400 z-30 pointer-events-none" />
-        {/* Left Border (bottom-to-top) */}
-        <span className="absolute bottom-0 left-0 w-px bg-sage h-0 group-hover:h-full transition-all duration-200 ease-out delay-600 z-30 pointer-events-none" />
       </div>
 
       {/* ── Caption (always below image) ── */}
@@ -214,27 +206,6 @@ function AsymCard({
 
 // ─── Main Export: Alternating Predictable Rows ──────────────────────────────
 export function AsymmetricGrid({ products }: { products: Product[] }) {
-  const [isClient, setIsClient] = useState(false);
-  const [randomPatterns, setRandomPatterns] = useState<number[]>([]);
-
-  useEffect(() => {
-    // Generate random layout patterns once on client to avoid hydration mismatch
-    const patterns = [];
-    for (let n = 0; n < products.length; n++) {
-      // 3 patterns: 0 (Wide Left), 1 (Wide Right), 2 (3 Normal)
-      let nextPattern = Math.floor(Math.random() * 3);
-      
-      // Prevent two consecutive rows of "3 normal images" (pattern 2)
-      if (patterns.length > 0 && patterns[patterns.length - 1] === 2 && nextPattern === 2) {
-        nextPattern = Math.floor(Math.random() * 2); // Force to be 0 or 1
-      }
-      
-      patterns.push(nextPattern);
-    }
-    setRandomPatterns(patterns);
-    setIsClient(true);
-  }, [products]);
-
   if (products.length === 0) return null;
 
   const rows: React.ReactNode[] = [];
@@ -242,42 +213,30 @@ export function AsymmetricGrid({ products }: { products: Product[] }) {
   let rowIndex = 0;
 
   while (i < products.length) {
-    // SSR uses predictable pattern. Client uses randomized pattern.
-    const cycle = isClient ? randomPatterns[rowIndex] : (rowIndex % 3);
+    const cycle = rowIndex % 2; // 0 = A (Asymmetric Left), 1 = C (3 normal columns)
     rowIndex++;
 
     if (cycle === 0) {
-      // Row Pattern A: [Wide (Left 1.6fr), Normal (Right 1fr)]
+      // Row Pattern A: [Wide Left (2fr, hFull), 2 Stacked Small Right (1fr)]
       const p1 = products[i];
       const p2 = products[i + 1];
+      const p3 = products[i + 2];
 
-      if (p1 && p2) {
+      if (p1 && p2 && p3) {
         rows.push(
-          <div key={`row-${i}`} className="grid grid-cols-1 md:grid-cols-[1.6fr_1fr] gap-1 items-start mb-1">
-            <AsymCard product={p1} index={i} aspectClass="aspect-[4/3]" />
-            <AsymCard product={p2} index={i + 1} aspectClass="aspect-[4/3]" />
-          </div>
-        );
-        i += 2;
-      } else {
-        // Fallback for final single product
-        rows.push(
-          <div key={`row-${i}`} className="grid grid-cols-1 md:grid-cols-2 gap-1 mb-1">
-            <div className="col-span-1">
-              <AsymCard product={p1} index={i} aspectClass="aspect-[4/3]" />
+          <div key={`row-${i}`} className="grid grid-cols-1 md:grid-cols-[2fr_1fr] gap-1 items-stretch mb-1">
+            <AsymCard product={p1} index={i} aspectClass="h-full" hFull={true} />
+            <div className="flex flex-col gap-1">
+              <AsymCard product={p2} index={i + 1} aspectClass="aspect-[4/3]" />
+              <AsymCard product={p3} index={i + 2} aspectClass="aspect-[4/3]" />
             </div>
           </div>
         );
-        i++;
-      }
-    } else if (cycle === 1) {
-      // Row Pattern B: [Normal (Left 1fr), Wide (Right 1.6fr)]
-      const p1 = products[i];
-      const p2 = products[i + 1];
-
-      if (p1 && p2) {
+        i += 3;
+      } else if (p1 && p2) {
+        // Fallback for 2 products: wide left, small right
         rows.push(
-          <div key={`row-${i}`} className="grid grid-cols-1 md:grid-cols-[1fr_1.6fr] gap-1 items-start mb-1">
+          <div key={`row-${i}`} className="grid grid-cols-1 md:grid-cols-[2fr_1fr] gap-1 items-start mb-1">
             <AsymCard product={p1} index={i} aspectClass="aspect-[4/3]" />
             <AsymCard product={p2} index={i + 1} aspectClass="aspect-[4/3]" />
           </div>

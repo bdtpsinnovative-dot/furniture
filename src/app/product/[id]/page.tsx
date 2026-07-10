@@ -96,6 +96,13 @@ export default async function ProductPage(props: { params: Promise<{ id: string 
       .map((img: any) => img.path);
   }
 
+  const width = product.width_cm || product.specs?.width_cm;
+  const length = product.length_cm || product.specs?.length_cm;
+  const thickness = product.thickness_cm || product.specs?.thickness_cm;
+  const sizeString = (width || length || thickness)
+    ? `${width || '-'} x ${length || '-'} x ${thickness || '-'} CM`
+    : null;
+
   const accordionItems: AccordionItem[] = [
     {
       title: 'Description',
@@ -106,8 +113,8 @@ export default async function ProductPage(props: { params: Promise<{ id: string 
       content: (
         <ul className="list-none space-y-2">
           {product.specs?.material && <li><strong>Material:</strong> {product.specs.material}</li>}
-          {product.specs?.size && <li><strong>Size:</strong> {product.specs.size}</li>}
-          {product.weight && <li><strong>Weight:</strong> {product.weight} kg</li>}
+          {sizeString && <li><strong>Size:</strong> {sizeString}</li>}
+          {product.weight ? <li><strong>Weight:</strong> {product.weight} kg</li> : null}
           <li><strong>SKU:</strong> {product.sku || 'N/A'}</li>
         </ul>
       ),
