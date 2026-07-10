@@ -18,14 +18,16 @@ function AsymCard({
   const [hovered, setHovered] = useState(false);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const imageRef = useRef<HTMLDivElement>(null);
-  const [origin, setOrigin] = useState({ x: 50, y: 50 });
-
   const handleMouseMove = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
     if (!imageRef.current) return;
     const rect = imageRef.current.getBoundingClientRect();
-    setOrigin({
-      x: ((e.clientX - rect.left) / rect.width) * 100,
-      y: ((e.clientY - rect.top) / rect.height) * 100,
+    const x = ((e.clientX - rect.left) / rect.width) * 100;
+    const y = ((e.clientY - rect.top) / rect.height) * 100;
+    
+    // Direct DOM manipulation bypasses React state for buttery smooth 60fps tracking
+    const imgs = imageRef.current.querySelectorAll<HTMLElement>('.card-img');
+    imgs.forEach(img => {
+      img.style.transformOrigin = `${x}% ${y}%`;
     });
   }, []);
 
@@ -82,7 +84,12 @@ function AsymCard({
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => {
         setHovered(false);
-        setOrigin({ x: 50, y: 50 });
+        if (imageRef.current) {
+          const imgs = imageRef.current.querySelectorAll<HTMLElement>('.card-img');
+          imgs.forEach(img => {
+            img.style.transformOrigin = '50% 50%';
+          });
+        }
       }}
       onMouseMove={handleMouseMove}
     >
@@ -100,13 +107,13 @@ function AsymCard({
               src={imgUrl}
               alt={`${product.name} - view ${idx + 1}`}
               loading={idx === 0 ? 'eager' : 'lazy'}
-              className="absolute inset-0 w-full h-full object-cover"
+              className="card-img absolute inset-0 w-full h-full object-cover will-change-transform"
               style={{
                 opacity: currentImageIndex === idx ? 1 : 0,
                 transform: currentImageIndex === idx
                   ? (hovered ? 'scale(1.06)' : 'scale(1)')
                   : 'scale(1.03)',
-                transformOrigin: `${origin.x}% ${origin.y}%`,
+                transformOrigin: '50% 50%', // default, dynamically updated via DOM
                 transition: 'opacity 1000ms ease-in-out, transform 700ms cubic-bezier(0.25, 1, 0.5, 1)',
                 pointerEvents: currentImageIndex === idx ? 'auto' : 'none',
               }}
@@ -198,6 +205,27 @@ function AsymCard({
 
 // ─── Main Export: Alternating Predictable Rows ──────────────────────────────
 export function AsymmetricGrid({ products }: { products: Product[] }) {
+  const [isClient, setIsClient] = useState(false);
+  const [randomPatterns, setRandomPatterns] = useState<number[]>([]);
+
+  useEffect(() => {
+    // Generate random layout patterns once on client to avoid hydration mismatch
+    const patterns = [];
+    for (let n = 0; n < products.length; n++) {
+      // 3 patterns: 0 (Wide Left), 1 (Wide Right), 2 (3 Normal)
+      let nextPattern = Math.floor(Math.random() * 3);
+      
+      // Prevent two consecutive rows of "3 normal images" (pattern 2)
+      if (patterns.length > 0 && patterns[patterns.length - 1] === 2 && nextPattern === 2) {
+        nextPattern = Math.floor(Math.random() * 2); // Force to be 0 or 1
+      }
+      
+      patterns.push(nextPattern);
+    }
+    setRandomPatterns(patterns);
+    setIsClient(true);
+  }, [products]);
+
   if (products.length === 0) return null;
 
   const rows: React.ReactNode[] = [];
@@ -205,7 +233,8 @@ export function AsymmetricGrid({ products }: { products: Product[] }) {
   let rowIndex = 0;
 
   while (i < products.length) {
-    const cycle = rowIndex % 3;
+    // SSR uses predictable pattern. Client uses randomized pattern.
+    const cycle = isClient ? randomPatterns[rowIndex] : (rowIndex % 3);
     rowIndex++;
 
     if (cycle === 0) {
@@ -224,7 +253,31 @@ export function AsymmetricGrid({ products }: { products: Product[] }) {
       } else {
         // Fallback for final single product
         rows.push(
-          <div key={`row-${i}`} className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12 md:mb-16">
+          <div key={`row-${i}`} className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-12 md:mb-16">
+            <div className="col-span-1">
+              <AsymCard product={p1} index={i} aspectClass="aspect-[16/10]" />
+            </div>
+          </div>
+        );
+        i++;
+      }
+    } else if (cycle === 1) {
+      // Row Pattern B: [Normal (Left 1fr), Wide (Right 1.6fr)]
+      const p1 = products[i];
+      const p2 = products[i + 1];
+
+      if (p1 && p2) {
+        rows.push(
+          <div key={`row-${i}`} className="grid grid-cols-1 md:grid-cols-[1fr_1.6fr] gap-x-8 md:gap-x-12 gap-y-8 items-start mb-12 md:mb-16">
+            <AsymCard product={p1} index={i} aspectClass="aspect-[4/5]" />
+            <AsymCard product={p2} index={i + 1} aspectClass="aspect-[16/10]" />
+          </div>
+        );
+        i += 2;
+      } else {
+        // Fallback for final single product
+        rows.push(
+          <div key={`row-${i}`} className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-12 md:mb-16">
             <div className="col-span-1">
               <AsymCard product={p1} index={i} aspectClass="aspect-[4/5]" />
             </div>
@@ -232,8 +285,8 @@ export function AsymmetricGrid({ products }: { products: Product[] }) {
         );
         i++;
       }
-    } else if (cycle === 1) {
-      // Row Pattern B: [Normal, Normal, Normal]
+    } else {
+      // Row Pattern C: [Normal, Normal, Normal]
       const p1 = products[i];
       const p2 = products[i + 1];
       const p3 = products[i + 2];
@@ -256,30 +309,6 @@ export function AsymmetricGrid({ products }: { products: Product[] }) {
           </div>
         );
         i += (p2 ? 2 : 1);
-      }
-    } else if (cycle === 2) {
-      // Row Pattern C: [Normal (Left 1fr), Wide (Right 1.6fr)]
-      const p1 = products[i];
-      const p2 = products[i + 1];
-
-      if (p1 && p2) {
-        rows.push(
-          <div key={`row-${i}`} className="grid grid-cols-1 md:grid-cols-[1fr_1.6fr] gap-x-8 md:gap-x-12 gap-y-8 items-start mb-12 md:mb-16">
-            <AsymCard product={p1} index={i} aspectClass="aspect-[4/5]" />
-            <AsymCard product={p2} index={i + 1} aspectClass="aspect-[16/10]" />
-          </div>
-        );
-        i += 2;
-      } else {
-        // Fallback for final single product
-        rows.push(
-          <div key={`row-${i}`} className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12 md:mb-16">
-            <div className="col-span-1">
-              <AsymCard product={p1} index={i} aspectClass="aspect-[4/5]" />
-            </div>
-          </div>
-        );
-        i++;
       }
     }
   }

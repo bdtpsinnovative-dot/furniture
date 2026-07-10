@@ -91,7 +91,9 @@ export function CatalogLayout({
         if (searchTerm) current.set('q', searchTerm);
         else current.delete('q');
         current.delete('page');
-        router.push(`${pathname}?${current.toString()}`);
+        startTransition(() => {
+          router.push(`${pathname}?${current.toString()}`, { scroll: false });
+        });
       }
     }, 500);
     return () => clearTimeout(timer);

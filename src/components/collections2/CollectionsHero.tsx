@@ -33,7 +33,6 @@ const SLIDE_DATA = [
 export function CollectionsHero() {
   const [activeIndex, setActiveIndex] = useState(0);
   const containerRef = useRef<HTMLDivElement>(null);
-  const ribbonRef = useRef<HTMLDivElement>(null);
   const slidesRef = useRef<(HTMLDivElement | null)[]>([]);
 
   // Set up auto-play loop (change slide every 6 seconds)
@@ -45,45 +44,101 @@ export function CollectionsHero() {
     return () => clearInterval(timer);
   }, []);
 
+  const prevIndexRef = useRef(0);
+
   useGSAP(() => {
-    if (!ribbonRef.current) return;
+    const currentIndex = activeIndex;
+    const prevIndex = prevIndexRef.current;
+    
+    if (!slidesRef.current[currentIndex]) return;
 
-    // 1. Slide the ribbon to the active position
-    const slidePercent = -activeIndex * (100 / SLIDE_DATA.length);
-    gsap.to(ribbonRef.current, {
-      xPercent: slidePercent,
-      duration: 1.4,
-      ease: 'power3.inOut',
-      overwrite: 'auto'
-    });
+    const currentSlide = slidesRef.current[currentIndex];
+    const previousSlide = slidesRef.current[prevIndex];
+    const currentImg = currentSlide.querySelector('.slide-img');
+    const currentContent = currentSlide.querySelector('.slide-content');
 
-    // 2. Animate Ken Burns and text fades for active slide, and reset inactive ones
+    // Force hide and reset any stray slides if user clicks fast
     SLIDE_DATA.forEach((_, idx) => {
-      const slideEl = slidesRef.current[idx];
-      if (!slideEl) return;
-
-      const img = slideEl.querySelector('.slide-img');
-      const content = slideEl.querySelector('.slide-content');
-
-      if (idx === activeIndex) {
-        // Active Slide: Trigger Ken Burns (slow zoom + slide left)
-        gsap.fromTo(img, 
-          { scale: 1.0, xPercent: 0 }, 
-          { scale: 1.08, xPercent: -3, duration: 6, ease: 'none', overwrite: 'auto' }
-        );
-        // Fade in content
-        gsap.fromTo(content, 
-          { opacity: 0, y: 30 }, 
-          { opacity: 1, y: 0, duration: 1.2, ease: 'power2.out', delay: 0.5, overwrite: 'auto' }
-        );
-      } else {
-        // Inactive Slides: Instantly reset positions and kill active animations
-        gsap.killTweensOf([img, content]);
-        gsap.set(img, { scale: 1.0, xPercent: 0 });
-        gsap.set(content, { opacity: 0, y: 30 });
+      if (idx !== currentIndex && idx !== prevIndex) {
+        const slideEl = slidesRef.current[idx];
+        if (!slideEl) return;
+        gsap.killTweensOf(slideEl);
+        gsap.set(slideEl, { visibility: 'hidden', zIndex: 1 });
+        
+        const img = slideEl.querySelector('.slide-img');
+        const content = slideEl.querySelector('.slide-content');
+        if (img && content) {
+          gsap.killTweensOf([img, content]);
+          gsap.set(img, { scale: 1.0, xPercent: 0 });
+          gsap.set(content, { opacity: 0, y: 30 });
+        }
       }
     });
 
+    if (currentIndex === prevIndex) {
+      // Initial Load
+      gsap.set(currentSlide, { xPercent: 0, visibility: 'visible', zIndex: 10 });
+      gsap.fromTo(currentImg,
+        { scale: 1.0, xPercent: 0 },
+        { scale: 1.08, xPercent: -3, duration: 6, ease: 'none', overwrite: 'auto' }
+      );
+      gsap.fromTo(currentContent,
+        { opacity: 0, y: 30 },
+        { opacity: 1, y: 0, duration: 1.2, ease: 'power2.out', delay: 0.5, overwrite: 'auto' }
+      );
+    } else {
+      // Transition
+      let direction = 1;
+      if (currentIndex > prevIndex) direction = 1;
+      else if (currentIndex < prevIndex) direction = -1;
+      
+      // Wrap overrides for infinite loop
+      if (currentIndex === 0 && prevIndex === SLIDE_DATA.length - 1) direction = 1;
+      if (currentIndex === SLIDE_DATA.length - 1 && prevIndex === 0) direction = -1;
+
+      const startX = 100 * direction;
+      const endX = -100 * direction;
+
+      gsap.set(currentSlide, { xPercent: startX, visibility: 'visible', zIndex: 10 });
+      if (previousSlide) gsap.set(previousSlide, { zIndex: 5 });
+
+      gsap.to(currentSlide, {
+        xPercent: 0,
+        duration: 1.4,
+        ease: 'power3.inOut',
+        overwrite: 'auto'
+      });
+
+      if (previousSlide) {
+        gsap.to(previousSlide, {
+          xPercent: endX,
+          duration: 1.4,
+          ease: 'power3.inOut',
+          overwrite: 'auto',
+          onComplete: () => {
+            gsap.set(previousSlide, { visibility: 'hidden', zIndex: 1 });
+            const prevImg = previousSlide.querySelector('.slide-img');
+            const prevContent = previousSlide.querySelector('.slide-content');
+            if (prevImg && prevContent) {
+              gsap.killTweensOf([prevImg, prevContent]);
+              gsap.set(prevImg, { scale: 1.0, xPercent: 0 });
+              gsap.set(prevContent, { opacity: 0, y: 30 });
+            }
+          }
+        });
+      }
+
+      gsap.fromTo(currentImg,
+        { scale: 1.0, xPercent: 0 },
+        { scale: 1.08, xPercent: -3, duration: 6, ease: 'none', overwrite: 'auto' }
+      );
+      gsap.fromTo(currentContent,
+        { opacity: 0, y: 30 },
+        { opacity: 1, y: 0, duration: 1.2, ease: 'power2.out', delay: 0.5, overwrite: 'auto' }
+      );
+    }
+
+    prevIndexRef.current = currentIndex;
   }, { dependencies: [activeIndex], scope: containerRef });
 
   return (
@@ -91,17 +146,14 @@ export function CollectionsHero() {
       ref={containerRef} 
       className="relative w-full h-screen overflow-hidden bg-ink select-none"
     >
-      {/* Horizontal Ribbon Container */}
-      <div 
-        ref={ribbonRef}
-        className="flex w-[300%] h-full"
-        style={{ transform: 'translate3d(0%, 0, 0)' }}
-      >
+      {/* Stacked Slides Container */}
+      <div className="absolute inset-0 w-full h-full">
         {SLIDE_DATA.map((slide, idx) => (
           <div
             key={idx}
             ref={(el) => { slidesRef.current[idx] = el; }}
-            className="w-1/3 h-full relative overflow-hidden flex-shrink-0"
+            className="absolute inset-0 w-full h-full overflow-hidden"
+            style={{ visibility: idx === 0 ? 'visible' : 'hidden' }}
           >
             {/* Background Image Container */}
             <div className="absolute inset-0 w-full h-full">
