@@ -17,6 +17,15 @@ const SLIDE_DATA = [
     ]
   },
   {
+    tag: "Timber Provenance",
+    title: "Solid FSC Oak Joinery.",
+    img: "https://pub-258bd10e7e8c4a7690a74c54cfbdef93.r2.dev/original/1783658884219-216.webp",
+    buttons: [
+      { label: "View Timber", href: "/collections2?group=oak" },
+      { label: "Read Provenance", href: "/collections2" }
+    ]
+  },
+  {
     tag: "Travertine Collection",
     title: "Sculpted Stone Tables.",
     img: "https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?auto=format&fit=crop&q=80&w=1600",
@@ -26,18 +35,9 @@ const SLIDE_DATA = [
     ]
   },
   {
-    tag: "Timber Provenance",
-    title: "Solid FSC Oak Joinery.",
-    img: "https://images.unsplash.com/photo-1615066390971-03e4e1c36ddf?auto=format&fit=crop&q=80&w=1600",
-    buttons: [
-      { label: "View Timber", href: "/collections2?group=oak" },
-      { label: "Read Provenance", href: "/collections2" }
-    ]
-  },
-  {
     tag: "Comfort & Form",
     title: "Tactile Bouclé Chairs.",
-    img: "https://images.unsplash.com/photo-1567538096630-e0c55bd6374c?auto=format&fit=crop&q=80&w=1600",
+    img: "https://pub-258bd10e7e8c4a7690a74c54cfbdef93.r2.dev/original/1783658898381-674.webp",
     buttons: [
       { label: "Explore Comfort", href: "/collections2?group=lumina" },
       { label: "Our Story", href: "/collections2" }
