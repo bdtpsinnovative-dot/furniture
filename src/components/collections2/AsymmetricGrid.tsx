@@ -9,7 +9,7 @@ import { Product } from './PremiumProductCard';
 function AsymCard({
   product,
   index,
-  aspectClass = 'aspect-[4/5]',
+  aspectClass = 'aspect-[4/3]',
 }: {
   product: Product;
   index: number;
@@ -93,10 +93,9 @@ function AsymCard({
       }}
       onMouseMove={handleMouseMove}
     >
-      {/* ── Image Area with Fixed Aspect Ratio ── */}
       <div
         ref={imageRef}
-        className={`relative ${aspectClass} w-full overflow-hidden cursor-pointer bg-[#F5F2EC]`}
+        className={`relative ${aspectClass} w-full overflow-hidden cursor-pointer bg-transparent`}
       >
         <Link href={`/product/${product.id}`} className="absolute inset-0 z-20" aria-label={product.name} />
         
@@ -107,7 +106,7 @@ function AsymCard({
               src={imgUrl}
               alt={`${product.name} - view ${idx + 1}`}
               loading={idx === 0 ? 'eager' : 'lazy'}
-              className="card-img absolute inset-0 w-full h-full object-cover will-change-transform"
+              className="card-img absolute inset-0 w-full h-full object-contain will-change-transform"
               style={{
                 opacity: currentImageIndex === idx ? 1 : 0,
                 transform: currentImageIndex === idx
@@ -123,7 +122,7 @@ function AsymCard({
           <img
             src="https://images.unsplash.com/photo-1555041469-a586c61ea9bc?auto=format&fit=crop&q=80&w=800"
             alt={product.name}
-            className="absolute inset-0 w-full h-full object-cover"
+            className="absolute inset-0 w-full h-full object-contain"
           />
         )}
 
@@ -146,6 +145,16 @@ function AsymCard({
             ))}
           </div>
         )}
+
+        {/* ── Clockwise Drawing Borders on Hover ── */}
+        {/* Top Border (left-to-right) */}
+        <span className="absolute top-0 left-0 h-px bg-sage w-0 group-hover:w-full transition-all duration-200 ease-out z-30 pointer-events-none" />
+        {/* Right Border (top-to-bottom) */}
+        <span className="absolute top-0 right-0 w-px bg-sage h-0 group-hover:h-full transition-all duration-200 ease-out delay-200 z-30 pointer-events-none" />
+        {/* Bottom Border (right-to-left) */}
+        <span className="absolute bottom-0 right-0 h-px bg-sage w-0 group-hover:w-full transition-all duration-200 ease-out delay-400 z-30 pointer-events-none" />
+        {/* Left Border (bottom-to-top) */}
+        <span className="absolute bottom-0 left-0 w-px bg-sage h-0 group-hover:h-full transition-all duration-200 ease-out delay-600 z-30 pointer-events-none" />
       </div>
 
       {/* ── Caption (always below image) ── */}
@@ -244,18 +253,18 @@ export function AsymmetricGrid({ products }: { products: Product[] }) {
 
       if (p1 && p2) {
         rows.push(
-          <div key={`row-${i}`} className="grid grid-cols-1 md:grid-cols-[1.6fr_1fr] gap-x-8 md:gap-x-12 gap-y-8 items-start mb-12 md:mb-16">
-            <AsymCard product={p1} index={i} aspectClass="aspect-[16/10]" />
-            <AsymCard product={p2} index={i + 1} aspectClass="aspect-[4/5]" />
+          <div key={`row-${i}`} className="grid grid-cols-1 md:grid-cols-[1.6fr_1fr] gap-1 items-start mb-1">
+            <AsymCard product={p1} index={i} aspectClass="aspect-[4/3]" />
+            <AsymCard product={p2} index={i + 1} aspectClass="aspect-[4/3]" />
           </div>
         );
         i += 2;
       } else {
         // Fallback for final single product
         rows.push(
-          <div key={`row-${i}`} className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-12 md:mb-16">
+          <div key={`row-${i}`} className="grid grid-cols-1 md:grid-cols-2 gap-1 mb-1">
             <div className="col-span-1">
-              <AsymCard product={p1} index={i} aspectClass="aspect-[16/10]" />
+              <AsymCard product={p1} index={i} aspectClass="aspect-[4/3]" />
             </div>
           </div>
         );
@@ -268,18 +277,18 @@ export function AsymmetricGrid({ products }: { products: Product[] }) {
 
       if (p1 && p2) {
         rows.push(
-          <div key={`row-${i}`} className="grid grid-cols-1 md:grid-cols-[1fr_1.6fr] gap-x-8 md:gap-x-12 gap-y-8 items-start mb-12 md:mb-16">
-            <AsymCard product={p1} index={i} aspectClass="aspect-[4/5]" />
-            <AsymCard product={p2} index={i + 1} aspectClass="aspect-[16/10]" />
+          <div key={`row-${i}`} className="grid grid-cols-1 md:grid-cols-[1fr_1.6fr] gap-1 items-start mb-1">
+            <AsymCard product={p1} index={i} aspectClass="aspect-[4/3]" />
+            <AsymCard product={p2} index={i + 1} aspectClass="aspect-[4/3]" />
           </div>
         );
         i += 2;
       } else {
         // Fallback for final single product
         rows.push(
-          <div key={`row-${i}`} className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-12 md:mb-16">
+          <div key={`row-${i}`} className="grid grid-cols-1 md:grid-cols-2 gap-1 mb-1">
             <div className="col-span-1">
-              <AsymCard product={p1} index={i} aspectClass="aspect-[4/5]" />
+              <AsymCard product={p1} index={i} aspectClass="aspect-[4/3]" />
             </div>
           </div>
         );
@@ -293,19 +302,19 @@ export function AsymmetricGrid({ products }: { products: Product[] }) {
 
       if (p1 && p2 && p3) {
         rows.push(
-          <div key={`row-${i}`} className="grid grid-cols-2 md:grid-cols-3 gap-x-6 md:gap-x-8 gap-y-8 items-start mb-12 md:mb-16">
-            <AsymCard product={p1} index={i} aspectClass="aspect-[4/5]" />
-            <AsymCard product={p2} index={i + 1} aspectClass="aspect-[4/5]" />
-            <AsymCard product={p3} index={i + 2} aspectClass="aspect-[4/5]" />
+          <div key={`row-${i}`} className="grid grid-cols-2 md:grid-cols-3 gap-1 items-start mb-1">
+            <AsymCard product={p1} index={i} aspectClass="aspect-[4/3]" />
+            <AsymCard product={p2} index={i + 1} aspectClass="aspect-[4/3]" />
+            <AsymCard product={p3} index={i + 2} aspectClass="aspect-[4/3]" />
           </div>
         );
         i += 3;
       } else {
         // Fallback if we only have 1 or 2 products left
         rows.push(
-          <div key={`row-${i}`} className="grid grid-cols-2 md:grid-cols-3 gap-x-6 md:gap-x-8 gap-y-8 mb-12 md:mb-16">
-            {p1 && <AsymCard product={p1} index={i} aspectClass="aspect-[4/5]" />}
-            {p2 && <AsymCard product={p2} index={i + 1} aspectClass="aspect-[4/5]" />}
+          <div key={`row-${i}`} className="grid grid-cols-2 md:grid-cols-3 gap-1 mb-1">
+            {p1 && <AsymCard product={p1} index={i} aspectClass="aspect-[4/3]" />}
+            {p2 && <AsymCard product={p2} index={i + 1} aspectClass="aspect-[4/3]" />}
           </div>
         );
         i += (p2 ? 2 : 1);

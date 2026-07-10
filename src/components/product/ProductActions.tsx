@@ -1,14 +1,24 @@
 'use client';
 
 import React, { useState } from 'react';
+import Link from 'next/link';
+
+interface Variant {
+  id: string | number;
+  color?: string;
+  specs?: {
+    material?: string;
+  };
+}
 
 interface ProductActionsProps {
   id: string | number;
   name: string;
   price: number;
+  variants?: Variant[];
 }
 
-export function ProductActions({ id, name, price }: ProductActionsProps) {
+export function ProductActions({ id, name, price, variants = [] }: ProductActionsProps) {
   const [quantity, setQuantity] = useState(1);
   const [isFavorite, setIsFavorite] = useState(false);
 
@@ -39,6 +49,35 @@ export function ProductActions({ id, name, price }: ProductActionsProps) {
       <div className="text-[15px] font-semibold text-ink mt-2">
         ${Number(price).toLocaleString()}
       </div>
+
+      {/* Variant Selector */}
+      {variants && variants.length > 1 && (
+        <div className="flex flex-col gap-2 mt-4">
+          <span className="font-sans text-[10px] uppercase tracking-widest text-muted block mb-1">
+            Options / Colors
+          </span>
+          <div className="flex flex-wrap gap-2">
+            {variants.map((v) => {
+              const isActive = String(v.id) === String(id);
+              // Clean color label
+              const label = v.color ? v.color.replace(/^Family\s*-\s*\d+\s*/, '') : (v.specs?.material || 'Default');
+              return (
+                <Link
+                  key={v.id}
+                  href={`/product/${v.id}`}
+                  className={`px-3 py-1.5 border text-[11px] font-sans font-semibold uppercase tracking-wider transition-all duration-300 ${
+                    isActive 
+                      ? 'border-sage bg-sage text-white' 
+                      : 'border-linen bg-surface text-ink hover:border-sage'
+                  }`}
+                >
+                  {label}
+                </Link>
+              );
+            })}
+          </div>
+        </div>
+      )}
 
       {/* Actions */}
       <div className="flex gap-4 mt-6 h-12">

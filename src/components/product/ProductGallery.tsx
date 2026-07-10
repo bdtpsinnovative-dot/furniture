@@ -47,7 +47,7 @@ export function ProductGallery({ mainImage, extraImages }: { mainImage: string; 
   return (
     <div className="flex flex-col gap-4">
       {/* Main Feature Image */}
-      <div className="w-full bg-[#F5F2EC] relative h-[500px] lg:h-[700px]">
+      <div className="w-full bg-[#F5F2EC] relative aspect-[4/3]">
         <div className="absolute top-6 right-6 border border-ink text-ink text-[10px] font-semibold uppercase tracking-[0.1em] px-3 py-1 z-10 pointer-events-none">
           Featured
         </div>
@@ -62,7 +62,7 @@ export function ProductGallery({ mainImage, extraImages }: { mainImage: string; 
       {extraImages && extraImages.length > 0 && (
         <div className="grid grid-cols-2 gap-4">
           {extraImages.map((img, idx) => (
-            <div key={idx} className="w-full bg-[#F5F2EC] relative h-[240px] lg:h-[400px]">
+            <div key={idx} className="w-full bg-[#F5F2EC] relative aspect-[4/3]">
               <ZoomableImage
                 src={img}
                 alt={`Product Detail ${idx + 1}`}

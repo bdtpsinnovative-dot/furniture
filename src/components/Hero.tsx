@@ -8,30 +8,12 @@ import { useGSAP } from '@gsap/react';
 // Register GSAP plugins (if any, but core gsap is fine)
 const SLIDE_DATA = [
   {
-    tag: "Architectural Curation",
-    title: "Crafted for Calm Living.",
-    img: "https://images.unsplash.com/photo-1600210492486-724fe5c67fb0?auto=format&fit=crop&q=80&w=1600",
-    buttons: [
-      { label: "Explore Collections", href: "/collections2" },
-      { label: "Our Provenance", href: "/collections2?group=oak" }
-    ]
-  },
-  {
     tag: "Timber Provenance",
     title: "Solid FSC Oak Joinery.",
     img: "https://pub-258bd10e7e8c4a7690a74c54cfbdef93.r2.dev/original/1783658884219-216.webp",
     buttons: [
       { label: "View Timber", href: "/collections2?group=oak" },
       { label: "Read Provenance", href: "/collections2" }
-    ]
-  },
-  {
-    tag: "Travertine Collection",
-    title: "Sculpted Stone Tables.",
-    img: "https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?auto=format&fit=crop&q=80&w=1600",
-    buttons: [
-      { label: "Shop Travertine", href: "/collections2?group=stone" },
-      { label: "View Curation", href: "/collections2" }
     ]
   },
   {
@@ -42,7 +24,27 @@ const SLIDE_DATA = [
       { label: "Explore Comfort", href: "/collections2?group=lumina" },
       { label: "Our Story", href: "/collections2" }
     ]
-  }
+  },
+  {
+    tag: "Architectural Curation",
+    title: "Crafted for Calm Living.",
+    img: "https://pub-258bd10e7e8c4a7690a74c54cfbdef93.r2.dev/original/1783673789280-365.webp",
+    buttons: [
+      { label: "Explore Collections", href: "/collections2" },
+      { label: "Our Provenance", href: "/collections2?group=oak" }
+    ]
+  },
+
+  {
+    tag: "Travertine Collection",
+    title: "Sculpted Stone Tables.",
+    img: "https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?auto=format&fit=crop&q=80&w=1600",
+    buttons: [
+      { label: "Shop Travertine", href: "/collections2?group=stone" },
+      { label: "View Curation", href: "/collections2" }
+    ]
+  },
+
 ];
 
 export function HeroSection() {
@@ -64,7 +66,7 @@ export function HeroSection() {
   useGSAP(() => {
     const currentIndex = activeIndex;
     const prevIndex = prevIndexRef.current;
-    
+
     if (!slidesRef.current[currentIndex]) return;
 
     const currentSlide = slidesRef.current[currentIndex];
@@ -79,7 +81,7 @@ export function HeroSection() {
         if (!slideEl) return;
         gsap.killTweensOf(slideEl);
         gsap.set(slideEl, { visibility: 'hidden', zIndex: 1 });
-        
+
         const img = slideEl.querySelector('.slide-img');
         const content = slideEl.querySelector('.slide-content');
         if (img && content) {
@@ -106,7 +108,7 @@ export function HeroSection() {
       let direction = 1;
       if (currentIndex > prevIndex) direction = 1;
       else if (currentIndex < prevIndex) direction = -1;
-      
+
       // Wrap overrides for infinite loop
       if (currentIndex === 0 && prevIndex === SLIDE_DATA.length - 1) direction = 1;
       if (currentIndex === SLIDE_DATA.length - 1 && prevIndex === 0) direction = -1;

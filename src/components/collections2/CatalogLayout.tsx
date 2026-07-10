@@ -169,47 +169,12 @@ export function CatalogLayout({
         </div>
       </div>
 
-      {/* Two-column layout: products LEFT, filter panel RIGHT */}
-      <div className="flex gap-16 xl:gap-20 items-start relative">
+      {/* Two-column layout: filter panel LEFT, products RIGHT */}
+      <div className="flex gap-8 xl:gap-12 items-start relative">
 
-        {/* ── LEFT: Product Grid ──────────────────────────────────── */}
-        <div
-          className="flex-1 min-w-0"
-          style={{
-            opacity: isPending ? 0.5 : 1,
-            transition: 'opacity 200ms ease',
-            pointerEvents: isPending ? 'none' : 'auto',
-          }}
-        >
-
-          {/* Item count */}
-          <div className="font-sans text-[11px] text-muted mb-8">
-            Showing{' '}
-            <span className="text-ink font-semibold">{products.length}</span>
-            {' '}of{' '}
-            <span className="text-ink font-semibold">{totalCount}</span>
-            {' '}pieces
-          </div>
-
-          {products.length > 0 ? (
-            <AsymmetricGrid products={products} />
-          ) : (
-            <div className="py-20 flex flex-col items-center justify-center text-muted border border-dashed border-hairline w-full">
-              <svg viewBox="0 0 24 24" className="w-8 h-8 stroke-muted stroke-[1.5px] fill-none mb-3">
-                <circle cx="12" cy="12" r="10"></circle>
-                <line x1="12" y1="8" x2="12" y2="12"></line>
-                <line x1="12" y1="16" x2="12.01" y2="16"></line>
-              </svg>
-              <p className="text-[14px]">No pieces found matching your filters.</p>
-            </div>
-          )}
-
-          <Pagination totalItems={totalCount} itemsPerPage={itemsPerPage} />
-        </div>
-
-        {/* ── RIGHT: Sticky Filter Panel ─────────────────────────── */}
+        {/* ── LEFT: Sticky Filter Panel ─────────────────────────── */}
         <aside
-          className="hidden lg:flex flex-col gap-10 w-[240px] xl:w-[260px] flex-shrink-0"
+          className="hidden lg:flex flex-col gap-10 w-[180px] xl:w-[200px] flex-shrink-0"
           style={{ position: 'sticky', top: '120px', alignSelf: 'flex-start' }}
         >
 
@@ -321,6 +286,42 @@ export function CatalogLayout({
             </div>
           </div>
         </aside>
+
+        {/* ── RIGHT: Product Grid ──────────────────────────────────── */}
+        <div
+          className="flex-1 min-w-0"
+          style={{
+            opacity: isPending ? 0.5 : 1,
+            transition: 'opacity 200ms ease',
+            pointerEvents: isPending ? 'none' : 'auto',
+          }}
+        >
+
+          {/* Item count */}
+          <div className="font-sans text-[11px] text-muted mb-8">
+            Showing{' '}
+            <span className="text-ink font-semibold">{products.length}</span>
+            {' '}of{' '}
+            <span className="text-ink font-semibold">{totalCount}</span>
+            {' '}pieces
+          </div>
+
+          {products.length > 0 ? (
+            <AsymmetricGrid products={products} />
+          ) : (
+            <div className="py-20 flex flex-col items-center justify-center text-muted border border-dashed border-hairline w-full">
+              <svg viewBox="0 0 24 24" className="w-8 h-8 stroke-muted stroke-[1.5px] fill-none mb-3">
+                <circle cx="12" cy="12" r="10"></circle>
+                <line x1="12" y1="8" x2="12" y2="12"></line>
+                <line x1="12" y1="16" x2="12.01" y2="16"></line>
+              </svg>
+              <p className="text-[14px]">No pieces found matching your filters.</p>
+            </div>
+          )}
+
+          <Pagination totalItems={totalCount} itemsPerPage={itemsPerPage} />
+        </div>
+
       </div>
     </main>
   );

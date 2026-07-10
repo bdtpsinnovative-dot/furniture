@@ -6,7 +6,6 @@ import { Header } from '@/components/layout/Header';
 import { ProductGallery } from '@/components/product/ProductGallery';
 import { ProductActions } from '@/components/product/ProductActions';
 import { ProductAccordion, AccordionItem } from '@/components/product/ProductAccordion';
-import { MOCK_PRODUCTS } from '@/data/mockProducts';
 import { PremiumProductCard } from '@/components/collections2/PremiumProductCard';
 export default async function ProductPage(props: { params: Promise<{ id: string }> }) {
   const params = await props.params;
@@ -15,35 +14,75 @@ export default async function ProductPage(props: { params: Promise<{ id: string 
   let product: any = null;
   let recommendedProducts: any[] = [];
 
-  // Intercept mock presentation IDs
-  if (params.id.startsWith('mock-')) {
-    product = MOCK_PRODUCTS.find(p => p.id === params.id);
-    recommendedProducts = MOCK_PRODUCTS.filter(p => p.id !== params.id).slice(0, 8);
-  } else {
-    const { data, error } = await supabase
-      .from('products')
-      .select('*')
-      .eq('id', params.id)
-      .single();
+  let collectionGroupName = '';
 
-    if (!error && data) {
-      product = data;
+  const { data, error } = await supabase
+    .from('products')
+    .select('*')
+    .eq('id', params.id)
+    .single();
 
-      // Fetch recommended products
-      const { data: recData } = await supabase
-        .from('products')
-        .select('*')
-        .neq('id', params.id)
-        .limit(8);
-        
-      if (recData) {
-        recommendedProducts = recData;
+  if (!error && data) {
+    product = data;
+
+    // Fetch collection group name if group ID exists
+    if (product.collection_group_id) {
+      const { data: groupData } = await supabase
+        .from('collection_groups')
+        .select('product_sup')
+        .eq('id', product.collection_group_id)
+        .single();
+      if (groupData) {
+        collectionGroupName = groupData.product_sup;
       }
     }
+
+    // Fetch recommended products of the same category, but from DIFFERENT collections
+    let recData: any[] = [];
+    let recQuery = supabase
+      .from('products')
+      .select('*')
+      .neq('id', params.id)
+      .eq('category_id', 'furniture');
+    
+    if (product.collection_group_id) {
+      recQuery = recQuery.neq('collection_group_id', product.collection_group_id);
+    } else {
+      recQuery = recQuery.neq('name', product.name);
+    }
+
+    const { data: rawRecs } = await recQuery.limit(40); // Fetch a pool of candidates
+    
+    if (rawRecs) {
+      const seenGroup = new Set();
+      const uniqueRecs: any[] = [];
+      rawRecs.forEach(p => {
+        const key = p.collection_group_id || p.name;
+        if (!seenGroup.has(key)) {
+          seenGroup.add(key);
+          uniqueRecs.push(p);
+        }
+      });
+      recData = uniqueRecs.slice(0, 8);
+    }
+    
+    recommendedProducts = recData;
   }
 
   if (!product) {
     notFound();
+  }
+
+  // Fetch all variants in the same collection group
+  let groupProducts: any[] = [];
+  if (product && product.collection_group_id) {
+    const { data: siblingData } = await supabase
+      .from('products')
+      .select('id, color, specs')
+      .eq('collection_group_id', product.collection_group_id);
+    if (siblingData) {
+      groupProducts = siblingData;
+    }
   }
 
   // Fallback image handling
@@ -95,7 +134,7 @@ export default async function ProductPage(props: { params: Promise<{ id: string 
         
         {/* Breadcrumb */}
         <div className="text-[11px] font-semibold uppercase tracking-[0.1em] text-muted mb-8">
-          Collections / {product.category_id || 'Furniture'} / <span className="text-ink">{product.name}</span>
+          Collections / {collectionGroupName || product.category_id || 'Furniture'} / <span className="text-ink">{product.name}</span>
         </div>
 
         {/* 2-Column Grid */}
@@ -114,6 +153,7 @@ export default async function ProductPage(props: { params: Promise<{ id: string 
                 id={product.id} 
                 name={product.name} 
                 price={product.price} 
+                variants={groupProducts}
               />
               
               <ProductAccordion items={accordionItems} />

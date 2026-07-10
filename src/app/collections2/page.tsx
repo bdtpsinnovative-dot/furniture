@@ -4,7 +4,8 @@ import { CollectionsHero } from '@/components/collections2/CollectionsHero';
 import { CatalogLayout } from '@/components/collections2/CatalogLayout';
 import { Product } from '@/components/collections2/PremiumProductCard';
 import { createClient } from '@/supabase/server';
-import { MOCK_PRODUCTS } from '@/data/mockProducts';
+
+export const dynamic = 'force-dynamic';
 
 export default async function Collections2Page(
   props: {
@@ -26,22 +27,6 @@ export default async function Collections2Page(
 
   let products: Product[] = [];
   let totalCount = 0;
-
-  // Filter the mock data list based on current active query params (search & material filters)
-  let filteredMock = [...MOCK_PRODUCTS];
-  if (q) {
-    const search = q.toLowerCase();
-    filteredMock = filteredMock.filter(p => p.name.toLowerCase().includes(search));
-  }
-  if (materialParam) {
-    const materials = materialParam.split(',').filter(Boolean).map(m => m.toLowerCase());
-    if (materials.length > 0) {
-      filteredMock = filteredMock.filter(p => {
-        const mat = p.specs?.material?.toLowerCase() || '';
-        return materials.some(m => mat.includes(m));
-      });
-    }
-  }
 
   try {
     let query = supabase
@@ -76,23 +61,33 @@ export default async function Collections2Page(
       query = query.order('id', { ascending: false }); // Newest default
     }
 
-    query = query.range(from, to);
-
-    const { data, count, error } = await query;
+    const { data, error } = await query;
 
     if (error) {
       console.error('Supabase query error:', error.message);
     }
     
-    // Mix data: prepend filtered mock products at the top, then add DB products
     const dbProducts = (data as Product[]) || [];
-    products = [...filteredMock, ...dbProducts];
-    totalCount = (count || 0) + filteredMock.length;
+    
+    // Deduplicate products by collection_group_id (if exists) or name
+    const seen = new Set();
+    const uniqueProducts: Product[] = [];
+    
+    dbProducts.forEach(p => {
+      const key = p.collection_group_id || p.name;
+      if (!seen.has(key)) {
+        seen.add(key);
+        uniqueProducts.push(p);
+      }
+    });
+
+    totalCount = uniqueProducts.length;
+    products = uniqueProducts.slice(from, from + itemsPerPage);
 
   } catch (err: any) {
-    console.log('Using mock data only. Reason:', err.message);
-    products = filteredMock;
-    totalCount = filteredMock.length;
+    console.log('Database query failed. Reason:', err.message);
+    products = [];
+    totalCount = 0;
   }
 
   // Fetch collection groups
@@ -101,7 +96,7 @@ export default async function Collections2Page(
     const { data: groupData } = await supabase
       .from('collection_groups')
       .select('id, product_sup')
-      .eq('tag', 'furniture')
+      .ilike('tag', 'furniture')
       .order('product_sup', { ascending: true });
     
     if (groupData) {

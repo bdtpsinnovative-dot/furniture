@@ -14,19 +14,19 @@ const SLIDE_DATA = [
     tag: "Ember & Ash Curation",
     title: "Collections",
     desc: "Browse our catalog of custom-crafted architectural furniture. Each piece is designed to celebrate the raw, honest texture of timber, travertine, and natural fabrics.",
-    img: "https://images.unsplash.com/photo-1600210492486-724fe5c67fb0?auto=format&fit=crop&q=80&w=1600",
+    img: "https://pub-258bd10e7e8c4a7690a74c54cfbdef93.r2.dev/original/1783658898381-674.webp",
   },
   {
     tag: "Material Sourcing",
     title: "Provenance",
     desc: "We honor the weight of solid FSC Oak and hand-honed travertine. Exposed grains, tactile textures, and natural details define our curation ethos.",
-    img: "https://images.unsplash.com/photo-1615066390971-03e4e1c36ddf?auto=format&fit=crop&q=80&w=1600",
+    img: "https://pub-258bd10e7e8c4a7690a74c54cfbdef93.r2.dev/original/1783658884219-216.webp",
   },
   {
     tag: "Form & Texture",
     title: "Living Space",
     desc: "Bringing architectural poise and comfort to residential interiors. Beautiful forms sculpted for a lifetime of sensory tactile warmth.",
-    img: "https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?auto=format&fit=crop&q=80&w=1600",
+    img: "https://pub-258bd10e7e8c4a7690a74c54cfbdef93.r2.dev/original/1783673557343-908.webp",
   }
 ];
 
@@ -49,7 +49,7 @@ export function CollectionsHero() {
   useGSAP(() => {
     const currentIndex = activeIndex;
     const prevIndex = prevIndexRef.current;
-    
+
     if (!slidesRef.current[currentIndex]) return;
 
     const currentSlide = slidesRef.current[currentIndex];
@@ -64,7 +64,7 @@ export function CollectionsHero() {
         if (!slideEl) return;
         gsap.killTweensOf(slideEl);
         gsap.set(slideEl, { visibility: 'hidden', zIndex: 1 });
-        
+
         const img = slideEl.querySelector('.slide-img');
         const content = slideEl.querySelector('.slide-content');
         if (img && content) {
@@ -91,7 +91,7 @@ export function CollectionsHero() {
       let direction = 1;
       if (currentIndex > prevIndex) direction = 1;
       else if (currentIndex < prevIndex) direction = -1;
-      
+
       // Wrap overrides for infinite loop
       if (currentIndex === 0 && prevIndex === SLIDE_DATA.length - 1) direction = 1;
       if (currentIndex === SLIDE_DATA.length - 1 && prevIndex === 0) direction = -1;
@@ -142,8 +142,8 @@ export function CollectionsHero() {
   }, { dependencies: [activeIndex], scope: containerRef });
 
   return (
-    <section 
-      ref={containerRef} 
+    <section
+      ref={containerRef}
       className="relative w-full h-screen overflow-hidden bg-ink select-none"
     >
       {/* Stacked Slides Container */}
@@ -193,11 +193,10 @@ export function CollectionsHero() {
           <button
             key={idx}
             onClick={() => setActiveIndex(idx)}
-            className={`w-2.5 h-2.5 rounded-full border transition-all duration-500 cursor-pointer ${
-              activeIndex === idx 
-                ? 'bg-sage border-sage scale-125' 
-                : 'bg-canvas/30 border-canvas/20 hover:bg-canvas/50'
-            }`}
+            className={`w-2.5 h-2.5 rounded-full border transition-all duration-500 cursor-pointer ${activeIndex === idx
+              ? 'bg-sage border-sage scale-125'
+              : 'bg-canvas/30 border-canvas/20 hover:bg-canvas/50'
+              }`}
             aria-label={`Go to slide ${idx + 1}`}
           />
         ))}
