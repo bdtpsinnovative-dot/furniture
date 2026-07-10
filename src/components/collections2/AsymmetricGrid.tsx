@@ -2,6 +2,7 @@
 
 import React, { useState, useRef, useCallback, useMemo, useEffect } from 'react';
 import Link from 'next/link';
+import { motion } from 'framer-motion';
 import { Product } from './PremiumProductCard';
 
 // ─── Individual Card with Multi-Image Cycling ──────────────────────────────
@@ -68,7 +69,15 @@ function AsymCard({
   }, [images.length, index]);
 
   return (
-    <div
+    <motion.div
+      initial={{ opacity: 0, y: 50 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, margin: "-50px" }}
+      transition={{ 
+        duration: 0.9, 
+        ease: [0.16, 1, 0.3, 1], // Custom bounce/spring-like ease
+        delay: (index % 3) * 0.1 // Staggering effect based on index
+      }}
       className="flex flex-col group w-full"
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => {
@@ -135,12 +144,23 @@ function AsymCard({
       {/* ── Caption (always below image) ── */}
       <div className="pt-3 pb-1 bg-canvas overflow-hidden">
         {/* Name — always visible */}
-        <h3
-          className="font-sans font-semibold uppercase tracking-tight text-ink leading-tight text-[13px] md:text-[14px]"
-          style={{ letterSpacing: '-0.01em' }}
-        >
-          {product.name}
-        </h3>
+        <div className="relative inline-block">
+          <h3
+            className="font-sans font-semibold uppercase tracking-tight text-ink leading-tight text-[13px] md:text-[14px]"
+            style={{ letterSpacing: '-0.01em' }}
+          >
+            {product.name}
+          </h3>
+          {/* Sage underline accent — grows from left on hover */}
+          <span
+            className="absolute bottom-0 left-0 transition-all duration-500"
+            style={{
+              width: hovered ? '100%' : '0%',
+              height: '2px',
+              backgroundColor: '#656C54',
+            }}
+          />
+        </div>
 
         {/* Extra info — reveals on hover */}
         <div
@@ -172,7 +192,7 @@ function AsymCard({
           </Link>
         </div>
       </div>
-    </div>
+    </motion.div>
   );
 }
 

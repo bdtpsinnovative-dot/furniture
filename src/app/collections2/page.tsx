@@ -101,6 +101,7 @@ export default async function Collections2Page(
     const { data: groupData } = await supabase
       .from('collection_groups')
       .select('id, product_sup')
+      .eq('tag', 'furniture')
       .order('product_sup', { ascending: true });
     
     if (groupData) {

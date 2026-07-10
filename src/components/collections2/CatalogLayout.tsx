@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useTransition } from 'react';
 import { useSearchParams, useRouter, usePathname } from 'next/navigation';
 import { Pagination } from '@/components/collections/Pagination';
 import { Product } from './PremiumProductCard';
@@ -27,6 +27,7 @@ export function CatalogLayout({
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
+  const [isPending, startTransition] = useTransition();
 
   const [isMobileFilterOpen, setIsMobileFilterOpen] = useState(false);
   const currentMaterials = searchParams.get('material')?.split(',').filter(Boolean) || [];
@@ -101,7 +102,9 @@ export function CatalogLayout({
     if (values.length > 0) current.set(key, values.join(','));
     else current.delete(key);
     current.delete('page');
-    router.push(`${pathname}?${current.toString()}`);
+    startTransition(() => {
+      router.push(`${pathname}?${current.toString()}`, { scroll: false });
+    });
   };
 
   const handleMaterialToggle = (material: string) => {
@@ -122,11 +125,15 @@ export function CatalogLayout({
     const current = new URLSearchParams(Array.from(searchParams.entries()));
     if (e.target.value) current.set('sort', e.target.value);
     else current.delete('sort');
-    router.push(`${pathname}?${current.toString()}`);
+    startTransition(() => {
+      router.push(`${pathname}?${current.toString()}`, { scroll: false });
+    });
   };
 
   const handleClearAll = () => {
-    router.push(pathname);
+    startTransition(() => {
+      router.push(pathname, { scroll: false });
+    });
     setSearchTerm('');
   };
 
@@ -135,21 +142,43 @@ export function CatalogLayout({
   return (
     <main className="w-full max-w-[1600px] mx-auto px-6 md:px-20 lg:px-32 xl:px-[180px] pt-28 pb-20 lg:pt-36">
 
+      {/* Sage loading bar — appears at top when filter is fetching */}
+      <div
+        className="fixed top-0 left-0 z-50 h-[2px] bg-sage transition-all duration-500"
+        style={{
+          width: isPending ? '100%' : '0%',
+          opacity: isPending ? 1 : 0,
+          transition: isPending
+            ? 'width 800ms cubic-bezier(0.16, 1, 0.3, 1), opacity 200ms ease'
+            : 'opacity 300ms ease 100ms, width 0ms ease 400ms',
+        }}
+      />
+
       {/* Page Title */}
-      <div className="mb-12 border-b border-hairline/40 pb-8">
-        <span className="font-sans text-[11px] font-bold uppercase tracking-[0.25em] text-sage mb-2.5 block">
-          Collection Directory
-        </span>
-        <h1 className="font-serif text-[38px] md:text-[52px] font-medium leading-[1.05] text-ink tracking-tight">
-          Curated Exhibition
-        </h1>
+      <div className="mb-12 border-b border-hairline/40 pb-8 flex items-end gap-6">
+        <div className="w-[3px] h-12 bg-sage flex-shrink-0 self-stretch" />
+        <div>
+          <span className="font-sans text-[11px] font-bold uppercase tracking-[0.25em] text-sage mb-2.5 block">
+            Collection Directory
+          </span>
+          <h1 className="font-serif text-[38px] md:text-[52px] font-medium leading-[1.05] text-ink tracking-tight">
+            Curated Exhibition
+          </h1>
+        </div>
       </div>
 
       {/* Two-column layout: products LEFT, filter panel RIGHT */}
       <div className="flex gap-16 xl:gap-20 items-start relative">
 
         {/* ── LEFT: Product Grid ──────────────────────────────────── */}
-        <div className="flex-1 min-w-0">
+        <div
+          className="flex-1 min-w-0"
+          style={{
+            opacity: isPending ? 0.5 : 1,
+            transition: 'opacity 200ms ease',
+            pointerEvents: isPending ? 'none' : 'auto',
+          }}
+        >
 
           {/* Item count */}
           <div className="font-sans text-[11px] text-muted mb-8">
@@ -258,7 +287,7 @@ export function CatalogLayout({
                     onClick={() => handleMaterialToggle(material)}
                     className="flex items-center text-left text-[12px] font-medium transition-colors hover:text-sage w-full group relative"
                   >
-                    <span className={`w-[5px] h-[5px] bg-sand absolute left-0 transition-transform duration-300 ${isActive ? 'scale-100' : 'scale-0'}`} />
+                    <span className={`w-[5px] h-[5px] bg-sage absolute left-0 transition-transform duration-300 ${isActive ? 'scale-100' : 'scale-0'}`} />
                     <span className={`font-sans tracking-wide transition-all duration-200 ${isActive ? 'text-sage pl-4 font-semibold' : 'text-body pl-2 group-hover:pl-4'}`}>
                       {material}
                     </span>
@@ -279,8 +308,8 @@ export function CatalogLayout({
           )}
 
           {/* Provenance note */}
-          <div className="border-t border-hairline pt-6 mt-2">
-            <span className="font-sans text-[9px] uppercase tracking-widest text-muted block mb-2">
+          <div className="border-t border-sage/20 pt-6 mt-2">
+            <span className="font-sans text-[9px] uppercase tracking-widest text-sage block mb-2">
               Provenance
             </span>
             <div className="text-[10px] font-medium text-body leading-[1.7] uppercase tracking-wider">
