@@ -110,16 +110,12 @@ export function CatalogLayout({
   };
 
   const handleMaterialToggle = (material: string) => {
-    const next = currentMaterials.includes(material)
-      ? currentMaterials.filter(m => m !== material)
-      : [...currentMaterials, material];
+    const next = currentMaterials.includes(material) ? [] : [material];
     updateParams('material', next);
   };
 
   const handleGroupToggle = (groupId: string) => {
-    const next = currentGroups.includes(groupId)
-      ? currentGroups.filter(g => g !== groupId)
-      : [...currentGroups, groupId];
+    const next = currentGroups.includes(groupId) ? [] : [groupId];
     updateParams('group', next);
   };
 
@@ -142,7 +138,7 @@ export function CatalogLayout({
   const hasActiveFilters = currentMaterials.length > 0 || currentGroups.length > 0 || !!searchTerm;
 
   return (
-    <main className="w-full max-w-[1600px] mx-auto px-6 md:px-20 lg:px-32 xl:px-[180px] pt-28 pb-20 lg:pt-36">
+    <main id="catalog" className="w-full max-w-[1600px] mx-auto px-6 md:px-20 lg:px-32 xl:px-[180px] pt-28 pb-20 lg:pt-36">
 
       {/* Sage loading bar — appears at top when filter is fetching */}
       <div

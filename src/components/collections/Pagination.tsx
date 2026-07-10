@@ -18,7 +18,7 @@ export function Pagination({ totalItems, itemsPerPage = 12 }: { totalItems: numb
     current.set('page', page.toString());
     const search = current.toString();
     const query = search ? `?${search}` : '';
-    router.push(`${pathname}${query}`);
+    router.push(`${pathname}${query}#catalog`);
   };
 
   // Logic to show a truncated list of page buttons with ellipsis
