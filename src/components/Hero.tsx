@@ -189,7 +189,7 @@ export function HeroSection() {
                 </span>
 
                 {/* Title */}
-                <h1 className="font-serif text-[40px] md:text-[56px] lg:text-[68px] leading-[1.1] tracking-tight text-white font-medium mb-6">
+                <h1 className="font-serif text-[32px] sm:text-[40px] md:text-[56px] lg:text-[68px] leading-[1.1] tracking-tight text-white font-medium mb-6 break-words max-w-full">
                   {slide.title}
                 </h1>
 

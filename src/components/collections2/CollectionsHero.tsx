@@ -171,7 +171,7 @@ export function CollectionsHero() {
                 <span className="font-sans text-[11px] font-bold uppercase tracking-[0.25em] text-[#C1B59A] border border-sage/30 bg-sage/10 px-3 py-1 mb-6 inline-block">
                   {slide.tag}
                 </span>
-                <h1 className="font-serif text-[64px] sm:text-[96px] lg:text-[110px] font-medium leading-none text-canvas tracking-[-0.03em] uppercase drop-shadow-sm mb-6">
+                <h1 className="font-serif text-[42px] sm:text-[80px] md:text-[96px] lg:text-[110px] font-medium leading-none text-canvas tracking-[-0.03em] uppercase drop-shadow-sm mb-6 break-words max-w-full">
                   {slide.title}
                 </h1>
                 <p className="font-sans text-[14px] sm:text-[16px] text-canvas/90 leading-[1.6] mb-8 font-light max-w-2xl">

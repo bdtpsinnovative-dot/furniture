@@ -218,7 +218,7 @@ export function CatalogLayout({
             <span className="font-sans text-[9px] font-bold uppercase tracking-[0.2em] text-muted block mb-3">
               Search
             </span>
-            <div className="relative border-b border-hairline focus-within:border-sage transition-colors duration-300 pb-1">
+            <div className="relative border-b border-sage focus-within:border-sage transition-colors duration-300 pb-1">
               <input
                 type="text"
                 value={searchTerm}
@@ -238,7 +238,7 @@ export function CatalogLayout({
             <span className="font-sans text-[9px] font-bold uppercase tracking-[0.2em] text-muted block mb-3">
               Sort By
             </span>
-            <div className="border-b border-hairline focus-within:border-sage transition-colors duration-300 pb-1">
+            <div className="border-b border-sage focus-within:border-sage transition-colors duration-300 pb-1">
               <select
                 className="w-full border-none bg-transparent font-sans text-[13px] font-medium text-ink outline-none cursor-pointer"
                 value={searchParams.get('sort') || ''}
@@ -252,7 +252,7 @@ export function CatalogLayout({
           </div>
 
           {/* Category Filter */}
-          <div>
+          <div className="border-b border-sage/40 pb-6">
             <span className="font-sans text-[9px] font-bold uppercase tracking-[0.2em] text-muted block mb-4">
               Category
             </span>
@@ -276,7 +276,7 @@ export function CatalogLayout({
           </div>
 
           {/* Material Filter */}
-          <div>
+          <div className="border-b border-sage/40 pb-6">
             <span className="font-sans text-[9px] font-bold uppercase tracking-[0.2em] text-muted block mb-4">
               Material
             </span>
