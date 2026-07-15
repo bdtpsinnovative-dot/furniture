@@ -34,6 +34,43 @@ export function CatalogLayout({
   const currentGroups = searchParams.get('group')?.split(',').filter(Boolean) || [];
   const [searchTerm, setSearchTerm] = useState(searchParams.get('q') || '');
 
+  // Hardcoded category hierarchy — always shown, DB id lookup used for filtering
+  const CATEGORY_STRUCTURE: { label: string; members: string[] }[] = [
+    { label: 'Chair', members: ['Arm chair', 'Bar stool', 'Dining chair', 'Lounge Chair'] },
+    { label: 'Modular & Sofa', members: ['Modular Sofa', 'Sofa'] },
+    { label: 'Bedroom Collection', members: [] },
+    { label: 'Table', members: ['Coffee Table', 'Night Table', 'Working Table', 'Side Table', 'Dining Table'] },
+    { label: 'Accessories', members: ['Clothes Rack'] },
+    { label: 'Leg', members: ['Leg Dining Table', 'Leg Coffee Table', 'Leg side Table'] },
+    { label: 'Stool & Ottoman', members: [] },
+    { label: 'Shelf', members: [] },
+    { label: 'Cabinet & More', members: [] },
+  ];
+
+  // Accordion open state per category parent
+  const [openCatGroups, setOpenCatGroups] = useState<Record<string, boolean>>({});
+
+  // groupedCategories: always includes ALL hardcoded items
+  // items with no DB match have id=undefined (shown dimmed, not clickable)
+  const groupedCategories = React.useMemo(() => {
+    const existingSups = new Set(collectionGroups.map(g => g.product_sup.toLowerCase()));
+
+    return CATEGORY_STRUCTURE.map((cat) => {
+      const items = cat.members.map((name) => ({
+        name,
+        // Instead of ID, we pass the exact name as the filter value if it exists in DB
+        id: existingSups.has(name.toLowerCase()) ? name : undefined,
+      }));
+      return { 
+        label: cat.label, 
+        items,
+        // If parent has no items, it acts as its own filter
+        id: existingSups.has(cat.label.toLowerCase()) ? cat.label : undefined
+      };
+    });
+  }, [collectionGroups]);
+
+
   const sidebarRef = React.useRef<HTMLDivElement>(null);
 
   // Sticky sidebar logic for items taller than the viewport
@@ -217,24 +254,103 @@ export function CatalogLayout({
             <span className="font-sans text-[9px] font-bold uppercase tracking-[0.2em] text-muted block mb-4">
               Category
             </span>
-            <div className="flex flex-col gap-3">
-              {collectionGroups.map((group) => {
-                const isActive = currentGroups.includes(group.id);
+            <div className="flex flex-col gap-1">
+              {groupedCategories.map((cat) => {
+                const isOpen = openCatGroups[cat.label];
+                const hasItems = cat.items.length > 0;
+                const anyActive = cat.items.some((item) => item.id && currentGroups.includes(item.id));
+
+                // Categories with no sub-items: parent is the direct filter item
+                if (!hasItems) {
+                  const id = cat.id;
+                  const isActive = id ? currentGroups.includes(id) : false;
+                  const noData = !id;
+                  return (
+                    <div key={cat.label}>
+                      <button
+                        onClick={() => id && handleGroupToggle(id)}
+                        className={`flex items-center justify-between w-full text-left py-1.5 group relative ${noData ? 'cursor-default' : ''}`}
+                      >
+                        <span
+                          className={`font-sans text-[11px] font-bold uppercase tracking-[0.12em] transition-colors ${
+                            isActive ? 'text-sage' : noData ? 'text-muted/50' : 'text-ink group-hover:text-sage'
+                          }`}
+                        >
+                          {cat.label}
+                        </span>
+                      </button>
+                    </div>
+                  );
+                }
+
                 return (
-                  <button
-                    key={group.id}
-                    onClick={() => handleGroupToggle(group.id)}
-                    className="flex items-center text-left text-[12px] font-medium transition-colors hover:text-sage w-full group relative"
-                  >
-                    <span className={`w-[5px] h-[5px] bg-sage absolute left-0 transition-transform duration-300 ${isActive ? 'scale-100' : 'scale-0'}`} />
-                    <span className={`font-sans tracking-wide transition-all duration-200 ${isActive ? 'text-sage pl-4 font-semibold' : 'text-body pl-2 group-hover:pl-4'}`}>
-                      {group.product_sup}
-                    </span>
-                  </button>
+                  <div key={cat.label}>
+                    {/* Parent header */}
+                    <button
+                      onClick={() =>
+                        setOpenCatGroups((prev) => ({ ...prev, [cat.label]: !prev[cat.label] }))
+                      }
+                      className="flex items-center justify-between w-full text-left py-1.5 group relative"
+                    >
+                      <span
+                        className={`font-sans text-[11px] font-bold uppercase tracking-[0.12em] transition-colors ${
+                          anyActive ? 'text-sage' : 'text-ink group-hover:text-sage'
+                        }`}
+                      >
+                        {cat.label}
+                        {anyActive && <span className="ml-1 opacity-60 text-[8px]">●</span>}
+                      </span>
+                      <svg viewBox="0 0 24 24" className="w-3 h-3 stroke-current stroke-2 fill-none flex-shrink-0 text-muted">
+                        {isOpen ? (
+                          <line x1="5" y1="12" x2="19" y2="12" />
+                        ) : (
+                          <>
+                            <line x1="12" y1="5" x2="12" y2="19" />
+                            <line x1="5" y1="12" x2="19" y2="12" />
+                          </>
+                        )}
+                      </svg>
+                    </button>
+
+                    {/* Sub-items — always shown from hardcoded list, dimmed if no DB match */}
+                    {isOpen && (
+                      <div className="flex flex-col gap-2 pl-3 pb-2">
+                        {cat.items.map((item) => {
+                          const isActive = item.id ? currentGroups.includes(item.id) : false;
+                          const noData = !item.id;
+                          return (
+                            <button
+                              key={item.name}
+                              onClick={() => item.id && handleGroupToggle(item.id)}
+                              className={`flex items-center text-left text-[12px] font-medium w-full group relative ${noData ? 'cursor-default' : 'transition-colors hover:text-sage'}`}
+                            >
+                              <span
+                                className={`w-[5px] h-[5px] bg-sage absolute left-0 transition-transform duration-300 ${
+                                  isActive ? 'scale-100' : 'scale-0'
+                                }`}
+                              />
+                              <span
+                                className={`font-sans tracking-wide transition-all duration-200 ${
+                                  isActive
+                                    ? 'text-sage pl-4 font-semibold'
+                                    : noData
+                                    ? 'text-muted/50 pl-2'
+                                    : 'text-body pl-2 group-hover:pl-4'
+                                }`}
+                              >
+                                {item.name}
+                              </span>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
                 );
               })}
             </div>
           </div>
+
 
           {/* Material Filter */}
           <div className="border-b border-sage/40 pb-6">

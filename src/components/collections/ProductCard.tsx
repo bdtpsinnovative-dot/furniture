@@ -23,6 +23,7 @@ export function ProductCard({ product }: { product: Product }) {
       
       <div className="w-full h-[280px] sm:h-[320px] bg-[#F5F2EC] flex items-center justify-center overflow-hidden mb-4 relative">
         <img 
+          key={imageUrl}
           src={imageUrl} 
           alt={product.name}
           className="w-[90%] h-[90%] object-contain mix-blend-multiply transition-transform duration-700 ease-in-out group-hover:scale-105"
@@ -37,9 +38,9 @@ export function ProductCard({ product }: { product: Product }) {
       </p>
 
       <div className="flex justify-between items-center mt-auto pb-1 relative z-20">
-        <span className="text-[13px] font-semibold text-ink">
-          ${Number(product.price).toLocaleString()}
-        </span>
+        <p className="text-[13px] font-medium text-ink">
+          ฿{Number(product.price).toLocaleString()}
+        </p>
         <button 
           className="w-6 h-6 grid place-content-center bg-transparent border-none cursor-pointer text-ink hover:opacity-70 transition-opacity"
           aria-label="Add to cart"

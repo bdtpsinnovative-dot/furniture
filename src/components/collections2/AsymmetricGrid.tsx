@@ -104,7 +104,7 @@ function AsymCard({
         {images.length > 0 ? (
           images.map((imgUrl, idx) => (
             <img
-              key={idx}
+              key={`${product.id}-${idx}`}
               src={imgUrl}
               alt={`${product.name} - view ${idx + 1}`}
               loading={idx === 0 ? 'eager' : 'lazy'}
@@ -185,7 +185,7 @@ function AsymCard({
               {product.specs?.material ? ` · ${product.specs.material}` : ''}
             </span>
             <span className="font-sans text-[13px] font-medium text-ink">
-              ${Number(product.price).toLocaleString()}
+              ฿{Number(product.price).toLocaleString()}
             </span>
           </div>
           <Link

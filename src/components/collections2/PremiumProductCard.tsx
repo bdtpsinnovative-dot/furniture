@@ -73,7 +73,7 @@ export function PremiumProductCard({ product, index }: { product: Product; index
         {images.length > 0 ? (
           images.map((imgUrl, idx) => (
             <img 
-              key={idx}
+              key={`${product.id}-${idx}`}
               src={imgUrl} 
               alt={`${product.name} - view ${idx + 1}`}
               className={`absolute inset-0 w-full h-full object-contain transition-all duration-1000 ease-in-out ${
@@ -132,8 +132,8 @@ export function PremiumProductCard({ product, index }: { product: Product; index
           <h3 className="font-sans font-medium text-[13px] md:text-[15px] leading-tight text-ink tracking-tight group-hover:text-sage transition-colors truncate">
             {product.name}
           </h3>
-          <span className="font-sans font-semibold text-[13px] md:text-[14px] text-ink whitespace-nowrap">
-            ${Number(product.price).toLocaleString()}
+          <span className="font-sans text-[12px] md:text-[13px] font-medium text-ink">
+            ฿{Number(product.price).toLocaleString()}
           </span>
         </div>
 

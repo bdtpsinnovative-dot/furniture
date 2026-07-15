@@ -7,6 +7,18 @@ import { ProductGallery } from '@/components/product/ProductGallery';
 import { ProductActions } from '@/components/product/ProductActions';
 import { ProductAccordion, AccordionItem } from '@/components/product/ProductAccordion';
 import { PremiumProductCard } from '@/components/collections2/PremiumProductCard';
+const CATEGORY_STRUCTURE: { label: string; members: string[] }[] = [
+  { label: 'Chair', members: ['Arm chair', 'Bar stool', 'Dining chair', 'Lounge Chair'] },
+  { label: 'Modular & Sofa', members: ['Modular Sofa', 'Sofa'] },
+  { label: 'Bedroom Collection', members: [] },
+  { label: 'Table', members: ['Coffee Table', 'Night Table', 'Working Table', 'Side Table', 'Dining Table'] },
+  { label: 'Accessories', members: ['Clothes Rack'] },
+  { label: 'Leg', members: ['Leg Dining Table', 'Leg Coffee Table', 'Leg side Table'] },
+  { label: 'Stool & Ottoman', members: [] },
+  { label: 'Shelf', members: [] },
+  { label: 'Cabinet & More', members: [] },
+];
+
 export default async function ProductPage(props: { params: Promise<{ id: string }> }) {
   const params = await props.params;
   const supabase = await createClient();
@@ -37,36 +49,112 @@ export default async function ProductPage(props: { params: Promise<{ id: string 
       }
     }
 
-    // Fetch recommended products of the same category, but from DIFFERENT collections
+    // Fetch recommended products prioritizing the same sub-category or head category
     let recData: any[] = [];
-    let recQuery = supabase
-      .from('products')
-      .select('*')
-      .neq('id', params.id)
-      .eq('category_id', 'furniture');
-    
-    if (product.collection_group_id) {
-      recQuery = recQuery.neq('collection_group_id', product.collection_group_id);
-    } else {
-      recQuery = recQuery.neq('name', product.name);
+    try {
+      const { data: allGroups } = await supabase
+        .from('collection_groups')
+        .select('id, product_sup')
+        .ilike('tag', 'furniture');
+
+      if (allGroups && product.collection_group_id) {
+        const currentGroup = allGroups.find(g => g.id === product.collection_group_id);
+        const currentSup = currentGroup?.product_sup;
+
+        if (currentSup) {
+          // 1. Same sub-category (same product_sup name)
+          const sameSubGroupIds = allGroups
+            .filter(g => g.product_sup && g.product_sup.toLowerCase() === currentSup.toLowerCase())
+            .map(g => g.id);
+
+          // 2. Same parent category (head category members)
+          const parentStructure = CATEGORY_STRUCTURE.find(cat => 
+            cat.label.toLowerCase() === currentSup.toLowerCase() ||
+            cat.members.some(m => m.toLowerCase() === currentSup.toLowerCase())
+          );
+
+          let sameHeadGroupIds: string[] = [];
+          if (parentStructure) {
+            const membersToMatch = [parentStructure.label, ...parentStructure.members].map(m => m.toLowerCase());
+            sameHeadGroupIds = allGroups
+              .filter(g => g.product_sup && membersToMatch.includes(g.product_sup.toLowerCase()))
+              .map(g => g.id);
+          }
+
+          const queryIds = sameHeadGroupIds.length > 0 ? sameHeadGroupIds : sameSubGroupIds;
+
+          if (queryIds.length > 0) {
+            const { data: rawRecs } = await supabase
+              .from('products')
+              .select('*')
+              .neq('id', params.id)
+              .eq('category_id', 'furniture')
+              .in('collection_group_id', queryIds)
+              .limit(50);
+
+            if (rawRecs) {
+              const seenGroup = new Set();
+              const uniqueRecs: any[] = [];
+
+              // First pass: add products in the same sub-category
+              rawRecs
+                .filter(p => p.collection_group_id && sameSubGroupIds.includes(p.collection_group_id))
+                .forEach(p => {
+                  const key = p.collection_group_id;
+                  if (!seenGroup.has(key)) {
+                    seenGroup.add(key);
+                    uniqueRecs.push(p);
+                  }
+                });
+
+              // Second pass: add products in other sub-categories of the same parent category
+              rawRecs
+                .filter(p => p.collection_group_id && !sameSubGroupIds.includes(p.collection_group_id))
+                .forEach(p => {
+                  const key = p.collection_group_id;
+                  if (!seenGroup.has(key)) {
+                    seenGroup.add(key);
+                    uniqueRecs.push(p);
+                  }
+                });
+
+              recData = uniqueRecs;
+            }
+          }
+        }
+      }
+    } catch (err) {
+      console.error('Failed smart recommendations fetch:', err);
     }
 
-    const { data: rawRecs } = await recQuery.limit(40); // Fetch a pool of candidates
-    
-    if (rawRecs) {
-      const seenGroup = new Set();
-      const uniqueRecs: any[] = [];
-      rawRecs.forEach(p => {
-        const key = p.collection_group_id || p.name;
-        if (!seenGroup.has(key)) {
-          seenGroup.add(key);
-          uniqueRecs.push(p);
+    // Fallback: if we still don't have 8 recommendations, fetch from any furniture
+    if (recData.length < 8) {
+      try {
+        const excludeGroups = [product.collection_group_id, ...recData.map(p => p.collection_group_id)].filter(Boolean);
+        let fallbackQuery = supabase
+          .from('products')
+          .select('*')
+          .neq('id', params.id)
+          .eq('category_id', 'furniture')
+          .limit(40);
+        
+        const { data: fallbackRecs } = await fallbackQuery;
+        if (fallbackRecs) {
+          const seenGroup = new Set(recData.map(p => p.collection_group_id));
+          fallbackRecs.forEach(p => {
+            const key = p.collection_group_id || p.name;
+            if (!seenGroup.has(key) && !excludeGroups.includes(p.collection_group_id) && recData.length < 8) {
+              seenGroup.add(key);
+              recData.push(p);
+            }
+          });
         }
-      });
-      recData = uniqueRecs.slice(0, 8);
+      } catch (err) {
+        console.error('Fallback recommendations fetch error:', err);
+      }
     }
-    
-    recommendedProducts = recData;
+
+    recommendedProducts = recData.slice(0, 8);
   }
 
   if (!product) {
@@ -78,8 +166,9 @@ export default async function ProductPage(props: { params: Promise<{ id: string 
   if (product && product.collection_group_id) {
     const { data: siblingData } = await supabase
       .from('products')
-      .select('id, color, specs')
-      .eq('collection_group_id', product.collection_group_id);
+      .select('id, color, price, image_url, specs')
+      .eq('collection_group_id', product.collection_group_id)
+      .order('id', { ascending: true });
     if (siblingData) {
       groupProducts = siblingData;
     }
