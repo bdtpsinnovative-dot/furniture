@@ -225,8 +225,8 @@ export function AsymmetricGrid({ products }: { products: Product[] }) {
       if (p1 && p2 && p3) {
         rows.push(
           <div key={`row-${i}`} className="grid grid-cols-1 md:grid-cols-[2fr_1fr] gap-1 items-stretch mb-1">
-            <AsymCard product={p1} index={i} aspectClass="h-full" hFull={true} />
-            <div className="flex flex-col gap-1">
+            <AsymCard product={p1} index={i} aspectClass="aspect-square md:aspect-auto md:h-full" hFull={true} />
+            <div className="grid grid-cols-2 md:flex md:flex-col gap-1">
               <AsymCard product={p2} index={i + 1} aspectClass="aspect-[4/3]" />
               <AsymCard product={p3} index={i + 2} aspectClass="aspect-[4/3]" />
             </div>
@@ -262,7 +262,9 @@ export function AsymmetricGrid({ products }: { products: Product[] }) {
       if (p1 && p2 && p3) {
         rows.push(
           <div key={`row-${i}`} className="grid grid-cols-2 md:grid-cols-3 gap-1 items-start mb-1">
-            <AsymCard product={p1} index={i} aspectClass="aspect-[4/3]" />
+            <div className="col-span-2 md:col-span-1">
+              <AsymCard product={p1} index={i} aspectClass="aspect-square md:aspect-[4/3]" />
+            </div>
             <AsymCard product={p2} index={i + 1} aspectClass="aspect-[4/3]" />
             <AsymCard product={p3} index={i + 2} aspectClass="aspect-[4/3]" />
           </div>
