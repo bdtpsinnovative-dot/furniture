@@ -27,6 +27,9 @@ interface DetailedProduct extends Product {
   length_cm?: number;
   thickness_cm?: number;
   color?: string;
+  description?: string;
+  weight?: number;
+  sku?: string;
 }
 
 export default async function ProductPage(props: { params: Promise<{ id: string }> }) {
@@ -67,8 +70,9 @@ export default async function ProductPage(props: { params: Promise<{ id: string 
         .select('id, product_sup')
         .ilike('tag', 'furniture');
 
-      if (allGroups && product.collection_group_id) {
-        const currentGroup = allGroups.find(g => g.id === product.collection_group_id);
+      const groupId = product?.collection_group_id;
+      if (allGroups && groupId) {
+        const currentGroup = allGroups.find(g => g.id === groupId);
         const currentSup = currentGroup?.product_sup;
 
         if (currentSup) {

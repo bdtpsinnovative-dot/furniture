@@ -509,7 +509,7 @@ export function CatalogLayout({
       <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-40 lg:hidden">
         <button
           onClick={() => setIsMobileFilterOpen(true)}
-          className="flex items-center gap-2 bg-ink text-canvas px-6 py-3.5 rounded-full shadow-[0_8px_30px_rgba(0,0,0,0.2)] font-sans text-[11px] font-bold uppercase tracking-[0.15em] transition-transform hover:scale-105 active:scale-95 whitespace-nowrap"
+          className="flex items-center gap-2 bg-sage text-canvas px-6 py-3.5 rounded-full shadow-[0_8px_30px_rgba(0,0,0,0.2)] font-sans text-[11px] font-bold uppercase tracking-[0.15em] transition-transform hover:scale-105 active:scale-95 whitespace-nowrap"
         >
           <svg viewBox="0 0 24 24" className="w-4 h-4 stroke-current stroke-[1.5px] fill-none">
             <line x1="4" y1="21" x2="4" y2="14"></line>
@@ -524,7 +524,7 @@ export function CatalogLayout({
           </svg>
           Filter & Sort
           {hasActiveFilters && (
-            <span className="flex items-center justify-center w-[18px] h-[18px] bg-sage text-canvas rounded-full text-[9px] ml-1 font-bold">
+            <span className="flex items-center justify-center w-[18px] h-[18px] bg-canvas text-sage rounded-full text-[9px] ml-1 font-bold">
               {currentMaterials.length + currentGroups.length + (searchTerm ? 1 : 0)}
             </span>
           )}
