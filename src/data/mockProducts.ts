@@ -11,8 +11,8 @@ export interface Product {
   specs?: {
     material?: string;
     size?: string;
-    images?: Array<{ path: string; [key: string]: any }>;
-    [key: string]: any;
+    images?: Array<{ path: string; [key: string]: unknown }>;
+    [key: string]: unknown;
   };
 }
 

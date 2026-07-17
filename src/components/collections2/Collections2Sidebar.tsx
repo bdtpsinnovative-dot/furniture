@@ -117,26 +117,9 @@ export function Collections2Sidebar({ collectionGroups = [] }: Collections2Sideb
     router.push(pathname);
   };
 
-  const AccordionIcon = ({ open }: { open: boolean }) => (
-    <svg viewBox="0 0 24 24" className="w-3 h-3 stroke-ink stroke-2 fill-none flex-shrink-0">
-      {open ? (
-        <line x1="5" y1="12" x2="19" y2="12" />
-      ) : (
-        <>
-          <line x1="12" y1="5" x2="12" y2="19" />
-          <line x1="5" y1="12" x2="19" y2="12" />
-        </>
-      )}
-    </svg>
-  );
 
-  const Dot = ({ active }: { active: boolean }) => (
-    <span
-      className={`w-[6px] h-[6px] bg-sage absolute left-0 transition-transform duration-300 ${
-        active ? 'scale-100' : 'scale-0'
-      }`}
-    />
-  );
+
+
 
   return (
     <aside className="hidden lg:flex flex-col w-[280px] flex-shrink-0 sticky top-28 h-fit border-r border-hairline pr-10">
@@ -327,3 +310,24 @@ export function Collections2Sidebar({ collectionGroups = [] }: Collections2Sideb
     </aside>
   );
 }
+
+const AccordionIcon = ({ open }: { open: boolean }) => (
+  <svg viewBox="0 0 24 24" className="w-3 h-3 stroke-ink stroke-2 fill-none flex-shrink-0">
+    {open ? (
+      <line x1="5" y1="12" x2="19" y2="12" />
+    ) : (
+      <>
+        <line x1="12" y1="5" x2="12" y2="19" />
+        <line x1="5" y1="12" x2="19" y2="12" />
+      </>
+    )}
+  </svg>
+);
+
+const Dot = ({ active }: { active: boolean }) => (
+  <span
+    className={`w-[6px] h-[6px] bg-sage absolute left-0 transition-transform duration-300 ${
+      active ? 'scale-100' : 'scale-0'
+    }`}
+  />
+);

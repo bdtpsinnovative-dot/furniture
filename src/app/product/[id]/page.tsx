@@ -19,12 +19,22 @@ const CATEGORY_STRUCTURE: { label: string; members: string[] }[] = [
   { label: 'Cabinet & More', members: [] },
 ];
 
+import { Product } from '@/components/collections2/PremiumProductCard';
+import { Variant } from '@/components/product/ProductActions';
+
+interface DetailedProduct extends Product {
+  width_cm?: number;
+  length_cm?: number;
+  thickness_cm?: number;
+  color?: string;
+}
+
 export default async function ProductPage(props: { params: Promise<{ id: string }> }) {
   const params = await props.params;
   const supabase = await createClient();
 
-  let product: any = null;
-  let recommendedProducts: any[] = [];
+  let product: DetailedProduct | null = null;
+  let recommendedProducts: Product[] = [];
 
   let collectionGroupName = '';
 
@@ -35,7 +45,7 @@ export default async function ProductPage(props: { params: Promise<{ id: string 
     .single();
 
   if (!error && data) {
-    product = data;
+    product = data as DetailedProduct;
 
     // Fetch collection group name if group ID exists
     if (product.collection_group_id) {
@@ -50,7 +60,7 @@ export default async function ProductPage(props: { params: Promise<{ id: string 
     }
 
     // Fetch recommended products prioritizing the same sub-category or head category
-    let recData: any[] = [];
+    let recData: Product[] = [];
     try {
       const { data: allGroups } = await supabase
         .from('collection_groups')
@@ -94,7 +104,7 @@ export default async function ProductPage(props: { params: Promise<{ id: string 
 
             if (rawRecs) {
               const seenGroup = new Set();
-              const uniqueRecs: any[] = [];
+              const uniqueRecs: Product[] = [];
 
               // First pass: add products in the same sub-category
               rawRecs
@@ -131,7 +141,7 @@ export default async function ProductPage(props: { params: Promise<{ id: string 
     if (recData.length < 8) {
       try {
         const excludeGroups = [product.collection_group_id, ...recData.map(p => p.collection_group_id)].filter(Boolean);
-        let fallbackQuery = supabase
+        const fallbackQuery = supabase
           .from('products')
           .select('*')
           .neq('id', params.id)
@@ -162,7 +172,7 @@ export default async function ProductPage(props: { params: Promise<{ id: string 
   }
 
   // Fetch all variants in the same collection group
-  let groupProducts: any[] = [];
+  let groupProducts: Variant[] = [];
   if (product && product.collection_group_id) {
     const { data: siblingData } = await supabase
       .from('products')
@@ -180,9 +190,12 @@ export default async function ProductPage(props: { params: Promise<{ id: string 
   // Extract extra images from specs.images if they exist
   let extraImages: string[] = [];
   if (product.specs?.images && Array.isArray(product.specs.images)) {
-    extraImages = product.specs.images
-      .sort((a: any, b: any) => (a.sort || 0) - (b.sort || 0))
-      .map((img: any) => img.path);
+    extraImages = (product.specs.images as unknown[])
+      .filter((img): img is { path: string; sort?: number } => 
+        typeof img === 'object' && img !== null && 'path' in img && typeof (img as { path: unknown }).path === 'string'
+      )
+      .sort((a, b) => (a.sort || 0) - (b.sort || 0))
+      .map((img) => img.path);
   }
 
   const width = product.width_cm || product.specs?.width_cm;

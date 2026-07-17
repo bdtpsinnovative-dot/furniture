@@ -18,6 +18,19 @@ interface CatalogLayoutProps {
   itemsPerPage: number;
 }
 
+  // Hardcoded category hierarchy — always shown, DB id lookup used for filtering
+  const CATEGORY_STRUCTURE: { label: string; members: string[] }[] = [
+    { label: 'Chair', members: ['Arm chair', 'Bar stool', 'Dining chair', 'Lounge Chair'] },
+    { label: 'Modular & Sofa', members: ['Modular Sofa', 'Sofa'] },
+    { label: 'Bedroom Collection', members: [] },
+    { label: 'Table', members: ['Coffee Table', 'Night Table', 'Working Table', 'Side Table', 'Dining Table'] },
+    { label: 'Accessories', members: ['Clothes Rack'] },
+    { label: 'Leg', members: ['Leg Dining Table', 'Leg Coffee Table', 'Leg side Table'] },
+    { label: 'Stool & Ottoman', members: [] },
+    { label: 'Shelf', members: [] },
+    { label: 'Cabinet & More', members: [] },
+  ];
+
 export function CatalogLayout({
   products,
   collectionGroups,
@@ -35,18 +48,7 @@ export function CatalogLayout({
   const currentGroups = searchParams.get('group')?.split(',').filter(Boolean) || [];
   const [searchTerm, setSearchTerm] = useState(searchParams.get('q') || '');
 
-  // Hardcoded category hierarchy — always shown, DB id lookup used for filtering
-  const CATEGORY_STRUCTURE: { label: string; members: string[] }[] = [
-    { label: 'Chair', members: ['Arm chair', 'Bar stool', 'Dining chair', 'Lounge Chair'] },
-    { label: 'Modular & Sofa', members: ['Modular Sofa', 'Sofa'] },
-    { label: 'Bedroom Collection', members: [] },
-    { label: 'Table', members: ['Coffee Table', 'Night Table', 'Working Table', 'Side Table', 'Dining Table'] },
-    { label: 'Accessories', members: ['Clothes Rack'] },
-    { label: 'Leg', members: ['Leg Dining Table', 'Leg Coffee Table', 'Leg side Table'] },
-    { label: 'Stool & Ottoman', members: [] },
-    { label: 'Shelf', members: [] },
-    { label: 'Cabinet & More', members: [] },
-  ];
+
 
   // Accordion open state per category parent
   const [openCatGroups, setOpenCatGroups] = useState<Record<string, boolean>>({});
@@ -472,7 +474,7 @@ export function CatalogLayout({
                   onClick={() => setSearchTerm('')}
                   className="inline-flex items-center gap-1.5 bg-sage/10 text-sage hover:bg-sage/20 transition-colors px-3 py-1.5 rounded-full font-sans text-[10px] font-bold uppercase tracking-wider"
                 >
-                  "{searchTerm}"
+                  &quot;{searchTerm}&quot;
                   <span className="text-[12px] -mr-0.5">×</span>
                 </button>
               )}

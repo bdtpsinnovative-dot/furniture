@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 
-interface Variant {
+export interface Variant {
   id: string | number;
   color?: string;
   price?: number;

@@ -9,7 +9,7 @@ export interface Product {
   category_id?: string;
   specs?: {
     material?: string;
-    [key: string]: any;
+    [key: string]: unknown;
   };
 }
 

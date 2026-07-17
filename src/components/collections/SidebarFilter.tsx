@@ -120,32 +120,9 @@ export function SidebarFilter({ collectionGroups = [] }: SidebarFilterProps) {
     router.push(pathname);
   };
 
-  const CheckboxIcon = ({ checked, disabled }: { checked: boolean; disabled?: boolean }) => (
-    <div
-      className={`w-4 h-4 border bg-surface grid place-content-center transition-colors ${
-        disabled
-          ? 'border-hairline opacity-40'
-          : checked
-          ? 'border-ink'
-          : 'border-muted group-hover:border-ink'
-      }`}
-    >
-      <div className={`w-[10px] h-[10px] bg-sage transition-transform ${checked ? 'scale-100' : 'scale-0'}`} />
-    </div>
-  );
 
-  const AccordionIcon = ({ open }: { open: boolean }) => (
-    <svg viewBox="0 0 24 24" className="w-3 h-3 stroke-ink stroke-2 fill-none flex-shrink-0">
-      {open ? (
-        <line x1="5" y1="12" x2="19" y2="12" />
-      ) : (
-        <>
-          <line x1="12" y1="5" x2="12" y2="19" />
-          <line x1="5" y1="12" x2="19" y2="12" />
-        </>
-      )}
-    </svg>
-  );
+
+
 
   return (
     <aside className="hidden lg:flex flex-col gap-0 w-[260px] flex-shrink-0">
@@ -319,3 +296,30 @@ export function SidebarFilter({ collectionGroups = [] }: SidebarFilterProps) {
     </aside>
   );
 }
+
+const CheckboxIcon = ({ checked, disabled }: { checked: boolean; disabled?: boolean }) => (
+  <div
+    className={`w-4 h-4 border bg-surface grid place-content-center transition-colors ${
+      disabled
+        ? 'border-hairline opacity-40'
+        : checked
+        ? 'border-ink'
+        : 'border-muted group-hover:border-ink'
+    }`}
+  >
+    <div className={`w-[10px] h-[10px] bg-sage transition-transform ${checked ? 'scale-100' : 'scale-0'}`} />
+  </div>
+);
+
+const AccordionIcon = ({ open }: { open: boolean }) => (
+  <svg viewBox="0 0 24 24" className="w-3 h-3 stroke-ink stroke-2 fill-none flex-shrink-0">
+    {open ? (
+      <line x1="5" y1="12" x2="19" y2="12" />
+    ) : (
+      <>
+        <line x1="12" y1="5" x2="12" y2="19" />
+        <line x1="5" y1="12" x2="19" y2="12" />
+      </>
+    )}
+  </svg>
+);

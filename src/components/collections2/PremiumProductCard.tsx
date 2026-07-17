@@ -12,7 +12,7 @@ export interface Product {
   collection_group_id?: string;
   specs?: {
     material?: string;
-    [key: string]: any;
+    [key: string]: unknown;
   };
 }
 
@@ -27,11 +27,11 @@ export function PremiumProductCard({ product, index }: { product: Product; index
     }
     const extraImages = product.specs?.images;
     if (Array.isArray(extraImages)) {
-      extraImages.forEach((img: any) => {
+      extraImages.forEach((img: unknown) => {
         if (typeof img === 'string') {
           list.push(img);
-        } else if (img && typeof img.path === 'string') {
-          list.push(img.path);
+        } else if (img && typeof img === 'object' && 'path' in img && typeof (img as { path: unknown }).path === 'string') {
+          list.push((img as { path: string }).path);
         }
       });
     }

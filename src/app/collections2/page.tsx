@@ -23,7 +23,7 @@ export default async function Collections2Page(
   
   const itemsPerPage = 12;
   const from = (page - 1) * itemsPerPage;
-  const to = from + itemsPerPage - 1;
+  // const to = from + itemsPerPage - 1;
 
   let products: Product[] = [];
   let totalCount = 0;
@@ -40,8 +40,8 @@ export default async function Collections2Page(
     if (groupData) {
       allGroups = groupData;
     }
-  } catch (err) {
-    console.log('Could not fetch collection groups');
+  } catch (err: unknown) {
+    console.log('Could not fetch collection groups', err);
   }
 
   // Deduplicate for the Sidebar props
@@ -122,8 +122,8 @@ export default async function Collections2Page(
     totalCount = unique.length;
     products = unique.slice(from, from + itemsPerPage);
 
-  } catch (err: any) {
-    console.log('Database query failed. Reason:', err.message);
+  } catch (err: unknown) {
+    console.log('Database query failed. Reason:', err instanceof Error ? err.message : String(err));
     products = [];
     totalCount = 0;
   }

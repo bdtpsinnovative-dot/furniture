@@ -76,8 +76,8 @@ export default async function CollectionsPage(
       products = data as Product[];
       totalCount = count || data.length;
     }
-  } catch (err: any) {
-    console.log('Using mock data. Reason:', err.message);
+  } catch (err: unknown) {
+    console.log('Using mock data. Reason:', err instanceof Error ? err.message : String(err));
     // Fallback mock data
     products = [
       { id: '1', name: 'Lumina Sofa', specs: { material: 'Bouclé Fabric' }, price: 2400, image_url: 'https://images.unsplash.com/photo-1555041469-a586c61ea9bc?auto=format&fit=crop&q=80&w=600' },
