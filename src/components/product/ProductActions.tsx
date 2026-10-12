@@ -7,6 +7,9 @@ export interface Variant {
   id: string | number;
   color?: string;
   price?: number;
+  original_price?: number;
+  discount_percent?: number;
+  discount_label?: string;
   image_url?: string;
   specs?: {
     material?: string;
@@ -21,6 +24,9 @@ interface ProductActionsProps {
   id: string | number;
   name: string;
   price: number;
+  originalPrice?: number;
+  discountPercent?: number;
+  discountLabel?: string;
   variants?: Variant[];
 }
 
@@ -92,7 +98,15 @@ function colorSwatch(colorName: string): string {
   return '#C8C0B4'; // warm neutral fallback
 }
 
-export function ProductActions({ id, name, price, variants = [] }: ProductActionsProps) {
+export function ProductActions({
+  id,
+  name,
+  price,
+  originalPrice,
+  discountPercent,
+  discountLabel,
+  variants = [],
+}: ProductActionsProps) {
   const [quantity, setQuantity] = useState(1);
   const [isFavorite, setIsFavorite] = useState(false);
   const [hoveredId, setHoveredId] = useState<string | number | null>(null);
@@ -114,6 +128,10 @@ export function ProductActions({ id, name, price, variants = [] }: ProductAction
   const hasGroups = Object.keys(grouped).length > 1;
   const hoveredVariant = hoveredId != null ? variants.find(v => String(v.id) === String(hoveredId)) : null;
 
+  const currentPrice = hoveredVariant?.price != null ? hoveredVariant.price : price;
+  const currentOriginalPrice = hoveredVariant?.original_price != null ? hoveredVariant.original_price : originalPrice;
+  const currentDiscountLabel = hoveredVariant?.discount_label != null ? hoveredVariant.discount_label : discountLabel;
+
   return (
     <div className="flex flex-col gap-6 w-full">
 
@@ -134,11 +152,27 @@ export function ProductActions({ id, name, price, variants = [] }: ProductAction
       {/* Title */}
       <h1 className="font-serif text-[36px] lg:text-[42px] leading-[1.1] font-normal text-ink">{name}</h1>
 
-      {/* Price — updates on hover */}
-      <div className="text-[15px] font-semibold text-ink mt-2">
-        {hoveredVariant?.price != null
-          ? `฿${Number(hoveredVariant.price).toLocaleString()}`
-          : `฿${Number(price).toLocaleString()}`}
+      {/* Price — updates on hover or active */}
+      <div className="flex items-baseline gap-3 mt-2 flex-wrap">
+        {currentOriginalPrice && currentOriginalPrice > currentPrice ? (
+          <>
+            <span className="text-[20px] lg:text-[22px] font-sans font-bold text-ink">
+              ฿{Number(currentPrice).toLocaleString()}
+            </span>
+            <span className="text-[14px] lg:text-[15px] font-sans line-through text-muted">
+              ฿{Number(currentOriginalPrice).toLocaleString()}
+            </span>
+            {currentDiscountLabel && (
+              <span className="px-2 py-0.5 text-[10px] font-sans font-bold tracking-wider uppercase bg-[#8C3A36] text-white shadow-sm">
+                {currentDiscountLabel}
+              </span>
+            )}
+          </>
+        ) : (
+          <span className="text-[18px] lg:text-[20px] font-sans font-semibold text-ink">
+            ฿{Number(currentPrice).toLocaleString()}
+          </span>
+        )}
       </div>
 
       {/* Variant Selector */}
@@ -229,8 +263,26 @@ export function ProductActions({ id, name, price, variants = [] }: ProductAction
                     </div>
                   )}
                   {hoveredVariant.price != null && (
-                    <div className="text-[12px] font-bold text-sage mt-0.5">
-                      ฿{Number(hoveredVariant.price).toLocaleString()}
+                    <div className="flex items-center gap-1.5 mt-0.5">
+                      {hoveredVariant.original_price && hoveredVariant.original_price > hoveredVariant.price ? (
+                        <>
+                          <span className="text-[10px] line-through text-muted font-sans">
+                            ฿{Number(hoveredVariant.original_price).toLocaleString()}
+                          </span>
+                          <span className="text-[12px] font-bold text-[#8C3A36] font-sans">
+                            ฿{Number(hoveredVariant.price).toLocaleString()}
+                          </span>
+                          {hoveredVariant.discount_label && (
+                            <span className="text-[9px] font-bold text-[#8C3A36] font-sans">
+                              {hoveredVariant.discount_label}
+                            </span>
+                          )}
+                        </>
+                      ) : (
+                        <div className="text-[12px] font-bold text-sage font-sans">
+                          ฿{Number(hoveredVariant.price).toLocaleString()}
+                        </div>
+                      )}
                     </div>
                   )}
                 </div>

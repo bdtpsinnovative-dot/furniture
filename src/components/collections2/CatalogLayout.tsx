@@ -74,53 +74,6 @@ export function CatalogLayout({
   }, [collectionGroups]);
 
 
-  const sidebarRef = React.useRef<HTMLDivElement>(null);
-
-  // Sticky sidebar logic for items taller than the viewport
-  useEffect(() => {
-    const sidebar = sidebarRef.current;
-    if (!sidebar) return;
-
-    let lastScrollY = window.scrollY;
-
-    const handleScroll = () => {
-      const scrollY = window.scrollY;
-      const rect = sidebar.getBoundingClientRect();
-      const viewportHeight = window.innerHeight;
-      const sidebarHeight = rect.height;
-
-      // Scroll direction
-      const isScrollingDown = scrollY > lastScrollY;
-      lastScrollY = scrollY;
-
-      // If sidebar is shorter than viewport, standard sticky top is fine
-      if (sidebarHeight < viewportHeight - 140) {
-        sidebar.style.position = 'sticky';
-        sidebar.style.top = '120px';
-        sidebar.style.bottom = 'auto';
-        return;
-      }
-
-      // If taller than viewport:
-      if (isScrollingDown) {
-        // Scrolling down: stick to the bottom of the viewport
-        const bottomOffset = viewportHeight - sidebarHeight - 40; // 40px padding at bottom
-        sidebar.style.position = 'sticky';
-        sidebar.style.top = `${bottomOffset}px`;
-        sidebar.style.bottom = 'auto';
-      } else {
-        // Scrolling up: stick to the top of the viewport
-        sidebar.style.position = 'sticky';
-        sidebar.style.top = '120px';
-        sidebar.style.bottom = 'auto';
-      }
-    };
-
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    handleScroll(); // run once initially
-
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
 
   // Debounce search
   useEffect(() => {
@@ -417,19 +370,18 @@ export function CatalogLayout({
       </div>
 
       {/* Two-column layout: filter panel LEFT, products RIGHT */}
-      <div className="flex gap-8 xl:gap-12 items-start relative">
+      <div className="flex gap-8 xl:gap-12 items-start relative min-h-[1000px] [overflow-anchor:none]">
 
         {/* ── LEFT: Sticky Filter Panel ─────────────────────────── */}
         <aside
-          className="hidden lg:flex flex-col gap-10 w-[180px] xl:w-[200px] flex-shrink-0"
-          style={{ position: 'sticky', top: '120px', alignSelf: 'flex-start' }}
+          className="hidden lg:flex flex-col gap-10 w-[180px] xl:w-[200px] flex-shrink-0 sticky top-[120px] self-start max-h-[calc(100vh-140px)] overflow-y-auto [scrollbar-width:none] h-fit z-10"
         >
           {filterPanelContent}
         </aside>
 
         {/* ── RIGHT: Product Grid ──────────────────────────────────── */}
         <div
-          className="flex-1 min-w-0"
+          className="flex-1 min-w-0 [overflow-anchor:none]"
           style={{
             opacity: isPending ? 0.5 : 1,
             transition: 'opacity 200ms ease',

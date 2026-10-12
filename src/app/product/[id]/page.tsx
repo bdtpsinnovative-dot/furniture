@@ -21,6 +21,7 @@ const CATEGORY_STRUCTURE: { label: string; members: string[] }[] = [
 
 import { Product } from '@/components/collections2/PremiumProductCard';
 import { Variant } from '@/components/product/ProductActions';
+import { calculateProductDiscount, DiscountInfo } from '@/lib/discount';
 import { MOCK_PRODUCTS } from '@/data/mockProducts';
 
 interface DetailedProduct extends Product {
@@ -33,23 +34,38 @@ interface DetailedProduct extends Product {
   sku?: string;
 }
 
+export const dynamic = 'force-dynamic';
+
 export default async function ProductPage(props: { params: Promise<{ id: string }> }) {
   const params = await props.params;
   const supabase = await createClient();
 
   let product: DetailedProduct | null = null;
   let recommendedProducts: Product[] = [];
+  let discountInfo: DiscountInfo = {
+    originalPrice: 0,
+    finalPrice: 0,
+    hasDiscount: false,
+  };
 
   let collectionGroupName = '';
 
   const { data, error } = await supabase
     .from('products')
-    .select('*')
+    .select('*, discount_rules(id, discounts(id, name, discount_type, value, active))')
     .eq('id', params.id)
     .single();
 
   if (!error && data) {
-    product = data as DetailedProduct;
+    const disc = calculateProductDiscount(data.price, data.discount_rules);
+    discountInfo = disc;
+    product = {
+      ...data,
+      price: disc.finalPrice,
+      original_price: disc.originalPrice,
+      discount_percent: disc.discountPercent,
+      discount_label: disc.discountLabel,
+    } as DetailedProduct;
 
     // Fetch collection group name if group ID exists
     if (product.collection_group_id) {
@@ -98,10 +114,21 @@ export default async function ProductPage(props: { params: Promise<{ id: string 
 
           const queryIds = sameHeadGroupIds.length > 0 ? sameHeadGroupIds : sameSubGroupIds;
 
+          const mapRecProduct = (p: any): Product => {
+            const disc = calculateProductDiscount(p.price, p.discount_rules);
+            return {
+              ...p,
+              price: disc.finalPrice,
+              original_price: disc.originalPrice,
+              discount_percent: disc.discountPercent,
+              discount_label: disc.discountLabel,
+            };
+          };
+
           if (queryIds.length > 0) {
             const { data: rawRecs } = await supabase
               .from('products')
-              .select('*')
+              .select('*, discount_rules(id, discounts(id, name, discount_type, value, active))')
               .neq('id', params.id)
               .eq('category_id', 'furniture')
               .in('collection_group_id', queryIds)
@@ -118,7 +145,7 @@ export default async function ProductPage(props: { params: Promise<{ id: string 
                   const key = p.collection_group_id;
                   if (!seenGroup.has(key)) {
                     seenGroup.add(key);
-                    uniqueRecs.push(p);
+                    uniqueRecs.push(mapRecProduct(p));
                   }
                 });
 
@@ -129,7 +156,7 @@ export default async function ProductPage(props: { params: Promise<{ id: string 
                   const key = p.collection_group_id;
                   if (!seenGroup.has(key)) {
                     seenGroup.add(key);
-                    uniqueRecs.push(p);
+                    uniqueRecs.push(mapRecProduct(p));
                   }
                 });
 
@@ -148,19 +175,30 @@ export default async function ProductPage(props: { params: Promise<{ id: string 
         const excludeGroups = [product.collection_group_id, ...recData.map(p => p.collection_group_id)].filter(Boolean);
         const fallbackQuery = supabase
           .from('products')
-          .select('*')
+          .select('*, discount_rules(id, discounts(id, name, discount_type, value, active))')
           .neq('id', params.id)
           .eq('category_id', 'furniture')
           .limit(40);
         
         const { data: fallbackRecs } = await fallbackQuery;
         if (fallbackRecs) {
+          const mapRecProduct = (p: any): Product => {
+            const disc = calculateProductDiscount(p.price, p.discount_rules);
+            return {
+              ...p,
+              price: disc.finalPrice,
+              original_price: disc.originalPrice,
+              discount_percent: disc.discountPercent,
+              discount_label: disc.discountLabel,
+            };
+          };
+
           const seenGroup = new Set(recData.map(p => p.collection_group_id));
           fallbackRecs.forEach(p => {
             const key = p.collection_group_id || p.name;
             if (!seenGroup.has(key) && !excludeGroups.includes(p.collection_group_id) && recData.length < 8) {
               seenGroup.add(key);
-              recData.push(p);
+              recData.push(mapRecProduct(p));
             }
           });
         }
@@ -187,11 +225,23 @@ export default async function ProductPage(props: { params: Promise<{ id: string 
   if (product && product.collection_group_id) {
     const { data: siblingData } = await supabase
       .from('products')
-      .select('id, color, price, image_url, specs')
+      .select('id, color, price, image_url, specs, discount_rules(id, discounts(id, name, discount_type, value, active))')
       .eq('collection_group_id', product.collection_group_id)
       .order('id', { ascending: true });
     if (siblingData) {
-      groupProducts = siblingData;
+      groupProducts = siblingData.map((s: any) => {
+        const disc = calculateProductDiscount(s.price, s.discount_rules);
+        return {
+          id: s.id,
+          color: s.color,
+          price: disc.finalPrice,
+          original_price: disc.originalPrice,
+          discount_percent: disc.discountPercent,
+          discount_label: disc.discountLabel,
+          image_url: s.image_url,
+          specs: s.specs,
+        };
+      });
     }
   }
 
@@ -272,7 +322,10 @@ export default async function ProductPage(props: { params: Promise<{ id: string 
               <ProductActions 
                 id={product.id} 
                 name={product.name} 
-                price={product.price} 
+                price={product.price}
+                originalPrice={discountInfo.originalPrice}
+                discountPercent={discountInfo.discountPercent}
+                discountLabel={discountInfo.discountLabel}
                 variants={groupProducts}
               />
               

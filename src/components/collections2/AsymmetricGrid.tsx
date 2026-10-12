@@ -112,8 +112,8 @@ function AsymCard({
               style={{
                 opacity: currentImageIndex === idx ? 1 : 0,
                 transform: currentImageIndex === idx
-                  ? (hovered ? 'scale(1.06)' : 'scale(1)')
-                  : 'scale(1.03)',
+                  ? (hovered ? 'scale(1.05)' : 'scale(1)')
+                  : 'scale(1.02)',
                 transformOrigin: '50% 50%', // default, dynamically updated via DOM
                 transition: 'opacity 1000ms ease-in-out, transform 700ms cubic-bezier(0.25, 1, 0.5, 1)',
                 pointerEvents: currentImageIndex === idx ? 'auto' : 'none',
@@ -128,9 +128,16 @@ function AsymCard({
           />
         )}
 
+        {/* Discount Badge */}
+        {product.discount_label && (
+          <div className="absolute top-3.5 left-3.5 z-25 px-2 py-0.5 bg-[#8C3A36] text-white font-sans text-[10px] font-bold tracking-wider uppercase shadow-sm pointer-events-none">
+            {product.discount_label}
+          </div>
+        )}
+
         {/* Gallery Dot Indicators for Multi-image Slabs */}
         {images.length > 1 && (
-          <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-20 flex gap-1.5 px-2.5 py-1 bg-ink/20 backdrop-blur-[3px] rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+          <div className="absolute top-3.5 right-3.5 z-25 flex gap-1.5 px-2.5 py-1 bg-ink/25 backdrop-blur-[3px] rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-auto">
             {images.map((_, idx) => (
               <button 
                 key={idx}
@@ -147,14 +154,52 @@ function AsymCard({
             ))}
           </div>
         )}
+
+        {/* ── Glassmorphic Slide-up Overlay inside the image ── */}
+        <div
+          className={`absolute bottom-0 inset-x-0 z-30 p-4 bg-gradient-to-t from-ink/85 via-ink/50 to-transparent backdrop-blur-[3px] text-canvas transition-all duration-400 ease-out flex flex-col justify-end ${
+            hovered
+              ? 'translate-y-0 opacity-100'
+              : 'translate-y-5 opacity-0 pointer-events-none'
+          }`}
+        >
+          <div className="flex items-center justify-between gap-2">
+            <span className="font-sans text-[10px] uppercase tracking-[0.15em] text-canvas/80 truncate">
+              {product.category_id || 'Furniture'}
+              {product.specs?.material ? ` · ${product.specs.material}` : ''}
+            </span>
+            <div className="flex items-center gap-2 flex-shrink-0">
+              {product.original_price && product.original_price > product.price ? (
+                <>
+                  <span className="font-sans text-[11px] line-through text-canvas/50">
+                    ฿{Number(product.original_price).toLocaleString()}
+                  </span>
+                  <span className="font-sans text-[13px] font-semibold text-white">
+                    ฿{Number(product.price).toLocaleString()}
+                  </span>
+                </>
+              ) : (
+                <span className="font-sans text-[13px] font-medium text-canvas">
+                  ฿{Number(product.price).toLocaleString()}
+                </span>
+              )}
+            </div>
+          </div>
+          <div className="inline-flex items-center gap-1.5 mt-2 text-[10px] font-bold uppercase tracking-[0.15em] text-[#D8CFBC] group-hover:text-white transition-colors">
+            <span>View piece</span>
+            <svg viewBox="0 0 24 24" className="w-3 h-3 stroke-current stroke-[2px] fill-none transition-transform duration-300 group-hover:translate-x-1">
+              <line x1="5" y1="12" x2="19" y2="12" />
+              <polyline points="12 5 19 12 12 19" />
+            </svg>
+          </div>
+        </div>
       </div>
 
-      {/* ── Caption (always below image) ── */}
-      <div className="pt-3 pb-1 bg-canvas overflow-hidden">
-        {/* Name — always visible */}
-        <div className="relative inline-block">
+      {/* ── Caption ── */}
+      <div className="pt-3 pb-2 bg-canvas">
+        <div className="relative inline-block min-w-0">
           <h3
-            className="font-sans font-semibold uppercase tracking-tight text-ink leading-tight text-[13px] md:text-[14px]"
+            className="font-sans font-semibold uppercase tracking-tight text-ink leading-tight text-[13px] md:text-[14px] truncate"
             style={{ letterSpacing: '-0.01em' }}
           >
             {product.name}
@@ -168,36 +213,6 @@ function AsymCard({
               backgroundColor: '#656C54',
             }}
           />
-        </div>
-
-        {/* Extra info — reveals on hover */}
-        <div
-          className="overflow-hidden transition-all duration-400 ease-out"
-          style={{
-            maxHeight: hovered ? '60px' : '0px',
-            opacity: hovered ? 1 : 0,
-            transition: 'max-height 350ms cubic-bezier(0.25, 1, 0.5, 1), opacity 300ms ease',
-          }}
-        >
-          <div className="flex items-center justify-between pt-2">
-            <span className="font-sans text-[10px] uppercase tracking-[0.15em] text-muted">
-              {product.category_id || 'Furniture'}
-              {product.specs?.material ? ` · ${product.specs.material}` : ''}
-            </span>
-            <span className="font-sans text-[13px] font-medium text-ink">
-              ฿{Number(product.price).toLocaleString()}
-            </span>
-          </div>
-          <Link
-            href={`/product/${product.id}`}
-            className="inline-flex items-center gap-1.5 mt-1.5 text-[10px] font-bold uppercase tracking-[0.12em] text-sage hover:text-olive transition-colors"
-          >
-            View piece
-            <svg viewBox="0 0 24 24" className="w-3 h-3 stroke-current stroke-[2px] fill-none">
-              <line x1="5" y1="12" x2="19" y2="12" />
-              <polyline points="12 5 19 12 12 19" />
-            </svg>
-          </Link>
         </div>
       </div>
     </motion.div>
@@ -217,14 +232,14 @@ export function AsymmetricGrid({ products }: { products: Product[] }) {
     rowIndex++;
 
     if (cycle === 0) {
-      // Row Pattern A: [Wide Left (2fr, hFull), 2 Stacked Small Right (1fr)]
+      // Row Pattern A: [Wide Left (2fr), 2 Stacked Small Right (1fr)]
       const p1 = products[i];
       const p2 = products[i + 1];
       const p3 = products[i + 2];
 
       if (p1 && p2 && p3) {
         rows.push(
-          <div key={`row-${i}`} className="grid grid-cols-1 md:grid-cols-[2fr_1fr] gap-1 items-stretch mb-1">
+          <div key={`row-${i}`} className="grid grid-cols-1 md:grid-cols-[2fr_1fr] gap-1 items-start mb-1">
             <AsymCard product={p1} index={i} aspectClass="aspect-square md:aspect-auto md:h-full" hFull={true} />
             <div className="grid grid-cols-2 md:flex md:flex-col gap-1">
               <AsymCard product={p2} index={i + 1} aspectClass="aspect-square" />

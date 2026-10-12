@@ -7,6 +7,9 @@ export interface Product {
   id: string | number;
   name: string;
   price: number;
+  original_price?: number;
+  discount_percent?: number;
+  discount_label?: string;
   image_url?: string;
   category_id?: string;
   collection_group_id?: string;
@@ -115,6 +118,13 @@ export function PremiumProductCard({ product, index }: { product: Product; index
         <span className="absolute top-4 left-4 z-20 font-sans text-[9px] tracking-widest uppercase bg-sage text-white px-2.5 py-1 border border-sage font-bold">
           {serial}
         </span>
+
+        {/* Discount Badge */}
+        {product.discount_label && (
+          <span className="absolute top-4 right-4 z-20 font-sans text-[9px] tracking-widest uppercase bg-[#8C3A36] text-white px-2 py-0.5 font-bold shadow-sm">
+            {product.discount_label}
+          </span>
+        )}
       </div>
 
       {/* Meta Specs & Identity */}
@@ -132,9 +142,22 @@ export function PremiumProductCard({ product, index }: { product: Product; index
           <h3 className="font-sans font-medium text-[13px] md:text-[15px] leading-tight text-ink tracking-tight group-hover:text-sage transition-colors truncate">
             {product.name}
           </h3>
-          <span className="font-sans text-[12px] md:text-[13px] font-medium text-ink">
-            ฿{Number(product.price).toLocaleString()}
-          </span>
+          <div className="flex items-center gap-1.5 flex-shrink-0">
+            {product.original_price && product.original_price > product.price ? (
+              <>
+                <span className="font-sans text-[11px] line-through text-muted">
+                  ฿{Number(product.original_price).toLocaleString()}
+                </span>
+                <span className="font-sans text-[12px] md:text-[13px] font-semibold text-[#8C3A36]">
+                  ฿{Number(product.price).toLocaleString()}
+                </span>
+              </>
+            ) : (
+              <span className="font-sans text-[12px] md:text-[13px] font-medium text-ink">
+                ฿{Number(product.price).toLocaleString()}
+              </span>
+            )}
+          </div>
         </div>
 
         {/* Bottom line: Material and Action */}

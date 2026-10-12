@@ -3,6 +3,7 @@ import { Header } from '@/components/layout/Header';
 import { CollectionsHero } from '@/components/collections2/CollectionsHero';
 import { CatalogLayout } from '@/components/collections2/CatalogLayout';
 import { Product } from '@/components/collections2/PremiumProductCard';
+import { calculateProductDiscount } from '@/lib/discount';
 import { createClient } from '@/supabase/server';
 
 import { MOCK_PRODUCTS } from '@/data/mockProducts';
@@ -55,7 +56,7 @@ export default async function Collections2Page(
     // first (representative) product per group is shown on the grid.
     let query = supabase
       .from('products')
-      .select('*')
+      .select('*, discount_rules(id, discounts(id, name, discount_type, value, active))')
       .eq('category_id', 'furniture');
 
     if (q) {
@@ -98,7 +99,23 @@ export default async function Collections2Page(
 
     const { data, error } = await query;
 
-    let allRows = (data as Product[]) || [];
+    const rawRows = (data as any[]) || [];
+    let allRows: Product[] = rawRows.map(p => {
+      const disc = calculateProductDiscount(p.price, p.discount_rules);
+      return {
+        ...p,
+        price: disc.finalPrice,
+        original_price: disc.originalPrice,
+        discount_percent: disc.discountPercent,
+        discount_label: disc.discountLabel,
+      };
+    });
+
+    if (sort === 'price_asc') {
+      allRows.sort((a, b) => a.price - b.price);
+    } else if (sort === 'price_desc') {
+      allRows.sort((a, b) => b.price - a.price);
+    }
 
     if (allRows.length === 0) {
       allRows = MOCK_PRODUCTS as unknown as Product[];
