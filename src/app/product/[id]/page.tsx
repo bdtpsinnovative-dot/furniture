@@ -33,6 +33,7 @@ interface DetailedProduct extends Product {
   description?: string;
   weight?: number;
   sku?: string;
+  unit?: string;
 }
 
 export const dynamic = 'force-dynamic';
@@ -260,27 +261,130 @@ export default async function ProductPage(props: { params: Promise<{ id: string 
       .map((img) => img.path);
   }
 
-  const width = product.width_cm || product.specs?.width_cm;
-  const length = product.length_cm || product.specs?.length_cm;
-  const thickness = product.thickness_cm || product.specs?.thickness_cm;
-  const sizeString = (width || length || thickness)
-    ? `${width || '-'} x ${length || '-'} x ${thickness || '-'} CM`
-    : null;
+  // Extract dimensions and specs from product root and specs JSON
+  const specs = (product.specs && typeof product.specs === 'object' ? product.specs : {}) as Record<string, any>;
+  const widthRaw = Number(product.width_cm || specs.width_cm) || null;
+  const lengthRaw = Number(product.length_cm || specs.length_cm) || null;
+  const depthRaw = Number(specs.depth_cm) || null;
+  const heightRaw = Number(product.thickness_cm || specs.thickness_cm || specs.height_cm) || null;
+
+  // Format single dimension (converting mm >= 100 to cm while keeping mm reference)
+  const formatDim = (val: number | null) => {
+    if (!val) return null;
+    if (val >= 100) {
+      const cm = (val / 10).toFixed(0);
+      return `${cm} cm (${val} mm)`;
+    }
+    return `${val} cm`;
+  };
+
+  const formattedWidth = formatDim(widthRaw);
+  const formattedLength = formatDim(lengthRaw);
+  const formattedDepth = formatDim(depthRaw);
+  const formattedHeight = formatDim(heightRaw);
+
+  // Overall Dimensions summary
+  const dimParts: string[] = [];
+  if (widthRaw) dimParts.push(`W ${widthRaw >= 100 ? (widthRaw / 10).toFixed(0) : widthRaw}`);
+  if (depthRaw) dimParts.push(`D ${depthRaw >= 100 ? (depthRaw / 10).toFixed(0) : depthRaw}`);
+  else if (lengthRaw) dimParts.push(`L ${lengthRaw >= 100 ? (lengthRaw / 10).toFixed(0) : lengthRaw}`);
+  if (heightRaw) dimParts.push(`H ${heightRaw >= 100 ? (heightRaw / 10).toFixed(0) : heightRaw}`);
+  const dimensionsSummary = dimParts.length > 0 ? `${dimParts.join(' × ')} cm` : null;
+
+  const material = specs.material || (specs.materials ? String(specs.materials) : null);
+  const color = product.color || specs.color || specs.colour || null;
+  const unit = product.unit || 'Piece';
+  const weight = product.weight && product.weight > 0 ? `${product.weight} kg` : null;
 
   const accordionItems: AccordionItem[] = [
     {
       title: 'Description',
-      content: product.description || 'A timeless piece crafted with premium materials. Designed to bring warmth and structural modernism into your living space.',
+      content: (
+        <div className="space-y-3">
+          <p>
+            {product.description || 'A timeless piece crafted with premium materials. Designed to bring warmth and structural modernism into your living space.'}
+          </p>
+          <p className="text-[12px] text-muted/80 italic">
+            Each piece is custom finished to highlight the organic character and architectural silhouette of the design.
+          </p>
+        </div>
+      ),
     },
     {
-      title: 'Additional information',
+      title: 'Specifications & Dimensions',
       content: (
-        <ul className="list-none space-y-2">
-          {product.specs?.material && <li><strong>Material:</strong> {product.specs.material}</li>}
-          {sizeString && <li><strong>Size:</strong> {sizeString}</li>}
-          {product.weight ? <li><strong>Weight:</strong> {product.weight} kg</li> : null}
-          <li><strong>SKU:</strong> {product.sku || 'N/A'}</li>
-        </ul>
+        <div className="grid grid-cols-2 gap-y-3.5 gap-x-6 py-1 text-[12px] font-sans">
+          <div className="border-b border-hairline/60 pb-2">
+            <span className="text-[10px] uppercase tracking-wider text-muted font-bold block mb-0.5">SKU</span>
+            <span className="text-ink font-medium">{product.sku || 'N/A'}</span>
+          </div>
+
+          <div className="border-b border-hairline/60 pb-2">
+            <span className="text-[10px] uppercase tracking-wider text-muted font-bold block mb-0.5">Collection</span>
+            <span className="text-ink font-medium">{collectionGroupName || product.category_id || 'Furniture'}</span>
+          </div>
+
+          {dimensionsSummary && (
+            <div className="border-b border-hairline/60 pb-2 col-span-2">
+              <span className="text-[10px] uppercase tracking-wider text-muted font-bold block mb-0.5">Dimensions (W × D × H)</span>
+              <span className="text-ink font-medium">{dimensionsSummary}</span>
+            </div>
+          )}
+
+          {formattedWidth && (
+            <div className="border-b border-hairline/60 pb-2">
+              <span className="text-[10px] uppercase tracking-wider text-muted font-bold block mb-0.5">Width</span>
+              <span className="text-ink font-medium">{formattedWidth}</span>
+            </div>
+          )}
+
+          {(formattedDepth || formattedLength) && (
+            <div className="border-b border-hairline/60 pb-2">
+              <span className="text-[10px] uppercase tracking-wider text-muted font-bold block mb-0.5">
+                {formattedDepth ? 'Depth' : 'Length'}
+              </span>
+              <span className="text-ink font-medium">{formattedDepth || formattedLength}</span>
+            </div>
+          )}
+
+          {formattedHeight && (
+            <div className="border-b border-hairline/60 pb-2">
+              <span className="text-[10px] uppercase tracking-wider text-muted font-bold block mb-0.5">Height</span>
+              <span className="text-ink font-medium">{formattedHeight}</span>
+            </div>
+          )}
+
+          {material && (
+            <div className="border-b border-hairline/60 pb-2">
+              <span className="text-[10px] uppercase tracking-wider text-muted font-bold block mb-0.5">Material</span>
+              <span className="text-ink font-medium">{material}</span>
+            </div>
+          )}
+
+          {color && (
+            <div className="border-b border-hairline/60 pb-2">
+              <span className="text-[10px] uppercase tracking-wider text-muted font-bold block mb-0.5">Color / Tone</span>
+              <span className="text-ink font-medium">{color}</span>
+            </div>
+          )}
+
+          {weight && (
+            <div className="border-b border-hairline/60 pb-2">
+              <span className="text-[10px] uppercase tracking-wider text-muted font-bold block mb-0.5">Weight</span>
+              <span className="text-ink font-medium">{weight}</span>
+            </div>
+          )}
+
+          <div className="border-b border-hairline/60 pb-2">
+            <span className="text-[10px] uppercase tracking-wider text-muted font-bold block mb-0.5">Assembly</span>
+            <span className="text-ink font-medium">Pre-assembled / Ready to place</span>
+          </div>
+
+          <div className="border-b border-hairline/60 pb-2">
+            <span className="text-[10px] uppercase tracking-wider text-muted font-bold block mb-0.5">Packaging</span>
+            <span className="text-ink font-medium">1 {unit} per Protective Export Crate</span>
+          </div>
+        </div>
       ),
     }
   ];
@@ -353,21 +457,21 @@ export default async function ProductPage(props: { params: Promise<{ id: string 
 
         {/* Recommended Products */}
         {recommendedProducts.length > 0 && (
-          <div className="mt-24 md:mt-32 pt-24 md:pt-32 pb-12 border-t border-hairline relative">
+          <div className="mt-14 md:mt-20 pt-10 md:pt-14 pb-12 border-t border-hairline relative">
             
             {/* Header Section */}
-            <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-16">
-              <div className="max-w-xl">
-                <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-sage mb-4 block">
+            <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-8 md:mb-10">
+              <div className="flex-1 min-w-0">
+                <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-sage mb-2 block whitespace-nowrap">
                   Curated Collection
                 </span>
-                <h2 className="text-[28px] md:text-[36px] font-medium tracking-tight text-ink leading-tight">
+                <h2 className="font-serif text-[26px] sm:text-[30px] md:text-[34px] font-normal md:font-medium tracking-tight text-ink leading-tight whitespace-normal sm:whitespace-nowrap">
                   You May Also Like
                 </h2>
               </div>
               <Link 
                 href="/collections2" 
-                className="inline-flex items-center gap-3 text-[11px] font-semibold uppercase tracking-[0.1em] text-ink hover:text-sage transition-colors group pb-2 border-b border-ink/20 hover:border-sage"
+                className="flex-shrink-0 inline-flex items-center gap-3 text-[11px] font-semibold uppercase tracking-[0.1em] text-ink hover:text-sage transition-colors group pb-1.5 border-b border-ink/20 hover:border-sage self-start md:self-auto"
               >
                 View all pieces
                 <svg viewBox="0 0 24 24" className="w-[14px] h-[14px] stroke-current stroke-[1.5px] fill-none transition-transform duration-300 group-hover:translate-x-1">

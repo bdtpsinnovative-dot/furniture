@@ -24,7 +24,7 @@ function ZoomableImage({ src, alt, className }: { src: string; alt: string; clas
   return (
     <div
       ref={containerRef}
-      className={`overflow-hidden ${isZoomed ? 'cursor-zoom-out' : 'cursor-zoom-in'} ${className || ''}`}
+      className={`overflow-hidden relative ${isZoomed ? 'cursor-zoom-out' : 'cursor-zoom-in'} ${className || ''}`}
       onMouseMove={handleMouseMove}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
@@ -32,9 +32,9 @@ function ZoomableImage({ src, alt, className }: { src: string; alt: string; clas
       <img
         src={src}
         alt={alt}
-        className="w-full h-full object-contain mix-blend-multiply transition-transform duration-300 ease-out"
+        className="w-full h-full object-cover transition-transform duration-500 ease-out"
         style={{
-          transform: isZoomed ? 'scale(2.5)' : 'scale(1)',
+          transform: isZoomed ? 'scale(2)' : 'scale(1)',
           transformOrigin: `${origin.x}% ${origin.y}%`,
         }}
         draggable={false}
@@ -43,32 +43,48 @@ function ZoomableImage({ src, alt, className }: { src: string; alt: string; clas
   );
 }
 
-export function ProductGallery({ mainImage, extraImages }: { mainImage: string; extraImages: string[] }) {
+export function ProductGallery({ mainImage, extraImages = [] }: { mainImage: string; extraImages: string[] }) {
+  const [activeImage, setActiveImage] = useState(mainImage);
+
+  React.useEffect(() => {
+    setActiveImage(mainImage);
+  }, [mainImage]);
+
+  const allImages = React.useMemo(() => {
+    return Array.from(new Set([mainImage, ...(extraImages || [])])).filter(Boolean);
+  }, [mainImage, extraImages]);
+
   return (
     <div className="flex flex-col gap-4">
       {/* Main Feature Image */}
-      <div className="w-full bg-[#F5F2EC] relative aspect-[4/3]">
-        <div className="absolute top-6 right-6 border border-ink text-ink text-[10px] font-semibold uppercase tracking-[0.1em] px-3 py-1 z-10 pointer-events-none">
+      <div className="w-full bg-surface border border-hairline relative aspect-square overflow-hidden group shadow-[0_4px_24px_rgba(0,0,0,0.02)]">
+        <div className="absolute top-4 right-4 bg-surface/90 backdrop-blur-md border border-hairline text-ink text-[9px] font-bold uppercase tracking-[0.15em] px-3 py-1.5 shadow-sm z-10 pointer-events-none">
           Featured
         </div>
         <ZoomableImage
-          src={mainImage}
+          src={activeImage || mainImage}
           alt="Featured Product"
-          className="w-full h-full p-8 lg:p-12"
+          className="w-full h-full"
         />
       </div>
 
-      {/* Grid of Extra Images */}
-      {extraImages && extraImages.length > 0 && (
-        <div className="grid grid-cols-2 gap-4">
-          {extraImages.map((img, idx) => (
-            <div key={idx} className="w-full bg-[#F5F2EC] relative aspect-[4/3]">
-              <ZoomableImage
+      {/* Grid of Extra Images / Thumbnails */}
+      {allImages.length > 1 && (
+        <div className="grid grid-cols-4 sm:grid-cols-5 gap-3">
+          {allImages.map((img, idx) => (
+            <button
+              key={idx}
+              onClick={() => setActiveImage(img)}
+              className={`aspect-square w-full bg-surface border overflow-hidden relative transition-all duration-300 cursor-pointer ${
+                activeImage === img ? 'border-sage ring-1 ring-sage' : 'border-hairline hover:border-muted opacity-75 hover:opacity-100'
+              }`}
+            >
+              <img
                 src={img}
-                alt={`Product Detail ${idx + 1}`}
-                className="w-full h-full p-4 lg:p-8"
+                alt={`Product thumbnail ${idx + 1}`}
+                className="w-full h-full object-cover"
               />
-            </div>
+            </button>
           ))}
         </div>
       )}
