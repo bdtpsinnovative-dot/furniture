@@ -33,7 +33,7 @@ export default async function CollectionsPage(
     let query = supabase
       .from('products')
       .select('*', { count: 'exact' })
-      .eq('category_id', 'furniture');
+      .or('category_id.eq.furniture,sku.ilike.EMBER%');
       
     if (q) {
       query = query.ilike('name', `%${q}%`);

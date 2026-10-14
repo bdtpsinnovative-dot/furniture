@@ -83,129 +83,64 @@ export default async function ProductPage(props: { params: Promise<{ id: string 
     // Fetch recommended products prioritizing the same sub-category or head category
     let recData: Product[] = [];
     try {
-      const { data: allGroups } = await supabase
-        .from('collection_groups')
-        .select('id, product_sup')
-        .ilike('tag', 'furniture');
-
-      const groupId = product?.collection_group_id;
-      if (allGroups && groupId) {
-        const currentGroup = allGroups.find(g => g.id === groupId);
-        const currentSup = currentGroup?.product_sup;
-
-        if (currentSup) {
-          // 1. Same sub-category (same product_sup name)
-          const sameSubGroupIds = allGroups
-            .filter(g => g.product_sup && g.product_sup.toLowerCase() === currentSup.toLowerCase())
-            .map(g => g.id);
-
-          // 2. Same parent category (head category members)
-          const parentStructure = CATEGORY_STRUCTURE.find(cat => 
-            cat.label.toLowerCase() === currentSup.toLowerCase() ||
-            cat.members.some(m => m.toLowerCase() === currentSup.toLowerCase())
-          );
-
-          let sameHeadGroupIds: string[] = [];
-          if (parentStructure) {
-            const membersToMatch = [parentStructure.label, ...parentStructure.members].map(m => m.toLowerCase());
-            sameHeadGroupIds = allGroups
-              .filter(g => g.product_sup && membersToMatch.includes(g.product_sup.toLowerCase()))
-              .map(g => g.id);
-          }
-
-          const queryIds = sameHeadGroupIds.length > 0 ? sameHeadGroupIds : sameSubGroupIds;
-
-          const mapRecProduct = (p: any): Product => {
-            const disc = calculateProductDiscount(p.price, p.discount_rules);
-            return {
-              ...p,
-              price: disc.finalPrice,
-              original_price: disc.originalPrice,
-              discount_percent: disc.discountPercent,
-              discount_label: disc.discountLabel,
-            };
-          };
-
-          if (queryIds.length > 0) {
-            const { data: rawRecs } = await supabase
-              .from('products')
-              .select('*, discount_rules(id, discounts(id, name, discount_type, value, active))')
-              .neq('id', params.id)
-              .eq('category_id', 'furniture')
-              .in('collection_group_id', queryIds)
-              .limit(50);
-
-            if (rawRecs) {
-              const seenGroup = new Set();
-              const uniqueRecs: Product[] = [];
-
-              // First pass: add products in the same sub-category
-              rawRecs
-                .filter(p => p.collection_group_id && sameSubGroupIds.includes(p.collection_group_id))
-                .forEach(p => {
-                  const key = p.collection_group_id;
-                  if (!seenGroup.has(key)) {
-                    seenGroup.add(key);
-                    uniqueRecs.push(mapRecProduct(p));
-                  }
-                });
-
-              // Second pass: add products in other sub-categories of the same parent category
-              rawRecs
-                .filter(p => p.collection_group_id && !sameSubGroupIds.includes(p.collection_group_id))
-                .forEach(p => {
-                  const key = p.collection_group_id;
-                  if (!seenGroup.has(key)) {
-                    seenGroup.add(key);
-                    uniqueRecs.push(mapRecProduct(p));
-                  }
-                });
-
-              recData = uniqueRecs;
-            }
-          }
-        }
+      let currentSup = '';
+      if (product?.collection_group_id) {
+        const { data: cg } = await supabase
+          .from('collection_groups')
+          .select('id, product_sup')
+          .eq('id', product.collection_group_id)
+          .single();
+        if (cg) currentSup = cg.product_sup || '';
       }
-    } catch (err) {
-      console.error('Failed smart recommendations fetch:', err);
-    }
 
-    // Fallback: if we still don't have 8 recommendations, fetch from any furniture
-    if (recData.length < 8) {
-      try {
-        const excludeGroups = [product.collection_group_id, ...recData.map(p => p.collection_group_id)].filter(Boolean);
-        const fallbackQuery = supabase
-          .from('products')
-          .select('*, discount_rules(id, discounts(id, name, discount_type, value, active))')
-          .neq('id', params.id)
-          .eq('category_id', 'furniture')
-          .limit(40);
-        
-        const { data: fallbackRecs } = await fallbackQuery;
-        if (fallbackRecs) {
-          const mapRecProduct = (p: any): Product => {
-            const disc = calculateProductDiscount(p.price, p.discount_rules);
-            return {
-              ...p,
-              price: disc.finalPrice,
-              original_price: disc.originalPrice,
-              discount_percent: disc.discountPercent,
-              discount_label: disc.discountLabel,
-            };
-          };
+      const mapRecProduct = (p: any): Product => {
+        const disc = calculateProductDiscount(p.price, p.discount_rules);
+        return {
+          ...p,
+          price: disc.finalPrice,
+          original_price: disc.originalPrice,
+          discount_percent: disc.discountPercent,
+          discount_label: disc.discountLabel,
+        };
+      };
 
-          const seenGroup = new Set(recData.map(p => p.collection_group_id));
-          fallbackRecs.forEach(p => {
+      // Fetch candidates from same furniture / EMBER catalog
+      const { data: rawRecs } = await supabase
+        .from('products')
+        .select('*, collection_groups(id, product_sup), discount_rules(id, discounts(id, name, discount_type, value, active))')
+        .neq('id', params.id)
+        .or('category_id.eq.furniture,sku.ilike.EMBER%')
+        .limit(60);
+
+      if (rawRecs && rawRecs.length > 0) {
+        const seenGroup = new Set<string>();
+        if (product?.collection_group_id) {
+          seenGroup.add(product.collection_group_id);
+        }
+
+        // Pass 1: Products with same product_sup
+        if (currentSup) {
+          rawRecs.forEach((p: any) => {
             const key = p.collection_group_id || p.name;
-            if (!seenGroup.has(key) && !excludeGroups.includes(p.collection_group_id) && recData.length < 8) {
+            const pSup = p.collection_groups?.product_sup || '';
+            if (pSup && pSup.toLowerCase() === currentSup.toLowerCase() && !seenGroup.has(key) && recData.length < 8) {
               seenGroup.add(key);
               recData.push(mapRecProduct(p));
             }
           });
         }
-      } catch (err) {
-        console.error('Fallback recommendations fetch error:', err);
+
+        // Pass 2: Products in other categories to fill up to 8
+        rawRecs.forEach((p: any) => {
+          const key = p.collection_group_id || p.name;
+          if (!seenGroup.has(key) && recData.length < 8) {
+            seenGroup.add(key);
+            recData.push(mapRecProduct(p));
+          }
+        });
       }
+    } catch (err) {
+      console.error('Failed smart recommendations fetch:', err);
     }
 
     recommendedProducts = recData.slice(0, 8);

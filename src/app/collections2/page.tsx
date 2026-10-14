@@ -8,6 +8,32 @@ import { createClient } from '@/supabase/server';
 
 export const dynamic = 'force-dynamic';
 
+const CATEGORY_STRUCTURE: { label: string; members: string[] }[] = [
+  { label: 'Chair', members: ['Arm chair', 'Bar stool', 'Dining chair', 'Lounge Chair', 'Side Chair'] },
+  { label: 'Modular & Sofa', members: ['Modular Sofa', 'Sofa'] },
+  { label: 'Bedroom Collection', members: [] },
+  { label: 'Table', members: ['Coffee Table', 'Night Table', 'Working Table', 'Side Table', 'Dining Table'] },
+  { label: 'Leg', members: ['Leg Dining Table', 'Leg Coffee Table', 'Leg side Table'] },
+  { label: 'Stool & Ottoman', members: [] },
+  { label: 'Shelf', members: [] },
+  { label: 'Cabinet & More', members: [] },
+  { label: 'Dressing & Working', members: [] },
+  { label: 'Accessories', members: ['Clothes Rack'] },
+];
+
+function matchesCategory(sup: string, target: string): boolean {
+  const s = sup.toLowerCase().trim();
+  const t = target.toLowerCase().trim();
+  if (s === t) return true;
+  const sNorm = s.replace(/[^a-z0-9]/g, '');
+  const tNorm = t.replace(/[^a-z0-9]/g, '');
+  if (sNorm === tNorm) return true;
+  if ((sNorm.includes('bed') && tNorm.includes('bed')) && (sNorm.includes('collection') && tNorm.includes('collection'))) return true;
+  if ((sNorm.includes('working') && (sNorm.includes('desk') || sNorm.includes('table'))) &&
+      (tNorm.includes('working') && (tNorm.includes('desk') || tNorm.includes('table')))) return true;
+  return false;
+}
+
 export default async function Collections2Page(
   props: {
     searchParams?: Promise<{ [key: string]: string | string[] | undefined }>;
@@ -24,81 +50,85 @@ export default async function Collections2Page(
   
   const itemsPerPage = 12;
   const from = (page - 1) * itemsPerPage;
-  // const to = from + itemsPerPage - 1;
 
   let products: Product[] = [];
   let totalCount = 0;
-
-  // Fetch collection groups first to map names back to IDs for filtering
-  let allGroups: { id: string; product_sup: string }[] = [];
-  try {
-    const { data: groupData } = await supabase
-      .from('collection_groups')
-      .select('id, product_sup')
-      .ilike('tag', 'furniture')
-      .order('product_sup', { ascending: true });
-    
-    if (groupData && groupData.length > 0) {
-      allGroups = groupData;
-    }
-  } catch (err: unknown) {
-    console.log('Could not fetch collection groups', err);
-  }
-
-  // Deduplicate for the Sidebar props
-  let collectionGroups = allGroups.filter((g, i, arr) => arr.findIndex(x => x.product_sup === g.product_sup) === i);
+  let collectionGroups: { id: string; product_sup: string }[] = [];
 
   try {
-    // Fetch a large pool to allow deduplication by collection_group_id.
-    // Each collection_group_id represents ONE product collection — only the
-    // first (representative) product per group is shown on the grid.
+    // Fetch all products belonging to furniture or EMBER catalog
     let query = supabase
       .from('products')
-      .select('*, discount_rules(id, discounts(id, name, discount_type, value, active))')
-      .eq('category_id', 'furniture');
+      .select('*, collection_groups(id, product_sup), discount_rules(id, discounts(id, name, discount_type, value, active))')
+      .or('category_id.eq.furniture,sku.ilike.EMBER%')
+      .limit(1000);
 
-    if (q) {
-      query = query.ilike('name', `%${q}%`);
+    const { data, error } = await query;
+    if (error) {
+      console.error('Supabase query error:', error.message);
     }
 
-    if (materialParam) {
-      const materials = materialParam.split(',').filter(Boolean).map(m => m.toLowerCase());
-      if (materials.length > 0) {
-        const orConditions = materials.map(m => `specs->>material.ilike.%${m}%`).join(',');
-        query = query.or(orConditions);
+    const rawRows = (data as any[]) || [];
+
+    // Extract all unique product_sup present in DB for sidebar matching
+    const presentSups = new Set<string>();
+    rawRows.forEach((p: any) => {
+      if (p.collection_groups?.product_sup) {
+        presentSups.add(p.collection_groups.product_sup);
       }
-    }
+    });
 
-    if (groupParam) {
-      const groupNames = groupParam.split(',').filter(Boolean).map(n => n.toLowerCase());
-      if (groupNames.length > 0) {
-        const matchingIds = allGroups
-          .filter(g => groupNames.includes(g.product_sup.toLowerCase()) || groupNames.includes(g.id.toLowerCase()))
-          .map(g => g.id);
-        
-        if (matchingIds.length > 0) {
-          query = query.in('collection_group_id', matchingIds);
-        } else {
-          query = query.in('collection_group_id', groupParam.split(','));
+    // Build enriched collectionGroups for the sidebar
+    const enrichedGroups: { id: string; product_sup: string }[] = [];
+    const dbSups = Array.from(presentSups);
+    for (const cat of CATEGORY_STRUCTURE) {
+      if (cat.members.length === 0) {
+        if (dbSups.some(s => matchesCategory(s, cat.label))) {
+          enrichedGroups.push({ id: cat.label, product_sup: cat.label });
+        }
+      } else {
+        for (const m of cat.members) {
+          if (dbSups.some(s => matchesCategory(s, m))) {
+            enrichedGroups.push({ id: m, product_sup: m });
+          }
         }
       }
     }
+    dbSups.forEach(s => enrichedGroups.push({ id: s, product_sup: s }));
+    collectionGroups = enrichedGroups;
 
-    if (sort === 'price_asc') {
-      query = query.order('price', { ascending: true });
-    } else if (sort === 'price_desc') {
-      query = query.order('price', { ascending: false });
-    } else {
-      query = query.order('id', { ascending: false });
+    // Filter in-memory:
+    let filteredRows = rawRows;
+
+    // 1. Text search
+    if (q) {
+      const search = q.toLowerCase().trim();
+      filteredRows = filteredRows.filter(p => (p.name || '').toLowerCase().includes(search));
     }
 
-    // Fetch enough rows to cover full deduplication (cap at 1000)
-    query = query.limit(1000);
+    // 2. Material filter
+    if (materialParam) {
+      const materials = materialParam.split(',').filter(Boolean).map(m => m.toLowerCase().trim());
+      if (materials.length > 0) {
+        filteredRows = filteredRows.filter(p => {
+          const mat = (p.specs?.material || '').toLowerCase();
+          return materials.some(m => mat.includes(m));
+        });
+      }
+    }
 
-    const { data, error } = await query;
+    // 3. Category / Group filter
+    if (groupParam) {
+      const targets = groupParam.split(',').filter(Boolean).map(t => t.toLowerCase().trim());
+      filteredRows = filteredRows.filter(p => {
+        const sup = p.collection_groups?.product_sup || '';
+        const grpId = (p.collection_group_id || '').toLowerCase();
+        return targets.some(t => matchesCategory(sup, t) || grpId === t);
+      });
+    }
 
-    const rawRows = (data as any[]) || [];
-    let allRows: Product[] = rawRows.map(p => {
+    // Map discount calculations
+    let allRows: Product[] = filteredRows.map(p => {
       const disc = calculateProductDiscount(p.price, p.discount_rules);
       return {
         ...p,
@@ -109,14 +139,16 @@ export default async function Collections2Page(
       };
     });
 
+    // Sorting
     if (sort === 'price_asc') {
       allRows.sort((a, b) => a.price - b.price);
     } else if (sort === 'price_desc') {
       allRows.sort((a, b) => b.price - a.price);
+    } else {
+      allRows.sort((a, b) => Number(b.id) - Number(a.id));
     }
 
     // Deduplicate: keep only the first product per collection_group_id.
-    // Products without a group id are shown as-is (each is unique).
     const seen = new Set<string>();
     const unique: Product[] = [];
     for (const p of allRows) {
