@@ -77,19 +77,9 @@ export default async function CollectionsPage(
       totalCount = count || data.length;
     }
   } catch (err: unknown) {
-    console.log('Using mock data. Reason:', err instanceof Error ? err.message : String(err));
-    // Fallback mock data
-    products = [
-      { id: '1', name: 'Lumina Sofa', specs: { material: 'Bouclé Fabric' }, price: 2400, image_url: 'https://images.unsplash.com/photo-1555041469-a586c61ea9bc?auto=format&fit=crop&q=80&w=600' },
-      { id: '2', name: 'Oak Dining Table', specs: { material: 'Solid Wood' }, price: 1850, image_url: 'https://images.unsplash.com/photo-1533090481720-856c6e3c1fdc?auto=format&fit=crop&q=80&w=600' },
-      { id: '3', name: 'Minimalist Chair', specs: { material: 'Leather & Wood' }, price: 650, image_url: 'https://images.unsplash.com/photo-1598300042247-d088f8ab3a91?auto=format&fit=crop&q=80&w=600' },
-      { id: '4', name: 'Ceramic Vase', specs: { material: 'Ceramic' }, price: 120, image_url: 'https://images.unsplash.com/photo-1581783898377-1c85bf937427?auto=format&fit=crop&q=80&w=600' },
-      { id: '5', name: 'Arch Table Lamp', specs: { material: 'Brushed Brass' }, price: 340, image_url: 'https://images.unsplash.com/photo-1507473885765-e6ed057f782c?auto=format&fit=crop&q=80&w=600' },
-      { id: '6', name: 'Woven Basket', specs: { material: 'Rattan' }, price: 85, image_url: 'https://images.unsplash.com/photo-1616627547584-bf28cee262db?auto=format&fit=crop&q=80&w=600' },
-      { id: '7', name: 'Lounge Chair', specs: { material: 'Bouclé Fabric' }, price: 890, image_url: 'https://images.unsplash.com/photo-1567538096630-e0c55bd6374c?auto=format&fit=crop&q=80&w=600' },
-      { id: '8', name: 'Stone Coffee Table', specs: { material: 'Travertine' }, price: 1200, image_url: 'https://images.unsplash.com/photo-1532372320572-cda25653a26d?auto=format&fit=crop&q=80&w=600' },
-    ];
-    totalCount = products.length;
+    console.error('Error fetching products:', err instanceof Error ? err.message : String(err));
+    products = [];
+    totalCount = 0;
   }
 
   // Fetch collection groups for sidebar filter

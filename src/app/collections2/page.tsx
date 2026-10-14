@@ -6,8 +6,6 @@ import { Product } from '@/components/collections2/PremiumProductCard';
 import { calculateProductDiscount } from '@/lib/discount';
 import { createClient } from '@/supabase/server';
 
-import { MOCK_PRODUCTS } from '@/data/mockProducts';
-
 export const dynamic = 'force-dynamic';
 
 export default async function Collections2Page(
@@ -117,17 +115,6 @@ export default async function Collections2Page(
       allRows.sort((a, b) => b.price - a.price);
     }
 
-    if (allRows.length === 0) {
-      allRows = MOCK_PRODUCTS as unknown as Product[];
-      if (collectionGroups.length === 0) {
-        collectionGroups = [
-          { id: 'lumina', product_sup: 'Lumina Collection' },
-          { id: 'oak', product_sup: 'Oak Timber' },
-          { id: 'solace', product_sup: 'Solace Minimal' },
-        ];
-      }
-    }
-
     // Deduplicate: keep only the first product per collection_group_id.
     // Products without a group id are shown as-is (each is unique).
     const seen = new Set<string>();
@@ -144,10 +131,9 @@ export default async function Collections2Page(
     products = unique.slice(from, from + itemsPerPage);
 
   } catch (err: unknown) {
-    console.log('Database query failed. Falling back to mock data:', err instanceof Error ? err.message : String(err));
-    const allRows = MOCK_PRODUCTS as unknown as Product[];
-    totalCount = allRows.length;
-    products = allRows.slice(from, from + itemsPerPage);
+    console.log('Database query error:', err instanceof Error ? err.message : String(err));
+    totalCount = 0;
+    products = [];
   }
 
   // Collection groups are already fetched above
