@@ -147,41 +147,7 @@ export function Header({ dynamic = false }: { dynamic?: boolean }) {
               <span className="hidden lg:inline">Search</span>
             </button>
 
-            <button
-              className={`flex items-center gap-2 text-[11px] font-medium uppercase tracking-[0.05em] transition-all duration-300 ${
-                isTransparent ? 'text-canvas/80 hover:text-white' : 'text-ink/80 hover:text-sage'
-              }`}
-              aria-label="Wishlist"
-            >
-              <svg
-                viewBox="0 0 24 24"
-                className={`w-4 h-4 fill-none stroke-[1.5px] transition-all duration-300 ${
-                  isTransparent ? 'stroke-canvas' : 'stroke-ink'
-                }`}
-              >
-                <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
-              </svg>
-              <span className="hidden lg:inline">Wishlist</span>
-            </button>
 
-            <button
-              className={`flex items-center gap-2 text-[11px] font-medium uppercase tracking-[0.05em] transition-all duration-300 ${
-                isTransparent ? 'text-canvas/80 hover:text-white' : 'text-ink/80 hover:text-sage'
-              }`}
-              aria-label="Cart"
-            >
-              <svg
-                viewBox="0 0 24 24"
-                className={`w-4 h-4 fill-none stroke-[1.5px] transition-all duration-300 ${
-                  isTransparent ? 'stroke-canvas' : 'stroke-ink'
-                }`}
-              >
-                <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path>
-                <line x1="3" y1="6" x2="21" y2="6"></line>
-                <path d="M16 10a4 4 0 0 1-8 0"></path>
-              </svg>
-              <span className="hidden lg:inline">Cart (0)</span>
-            </button>
 
             {/* Hamburger Button (Always visible on all screens) */}
             <button
@@ -300,32 +266,7 @@ export function Header({ dynamic = false }: { dynamic?: boolean }) {
               </span>
             </button>
 
-            <button
-              onClick={() => setIsMenuOpen(false)}
-              className="w-full flex items-center justify-between py-2.5 px-3 rounded-lg text-sm text-ink/80 hover:bg-ink/5 transition-colors"
-            >
-              <span className="flex items-center gap-3">
-                <svg viewBox="0 0 24 24" className="w-4 h-4 fill-none stroke-current stroke-[1.5px]">
-                  <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
-                </svg>
-                Wishlist
-              </span>
-            </button>
 
-            <button
-              onClick={() => setIsMenuOpen(false)}
-              className="w-full flex items-center justify-between py-2.5 px-3 rounded-lg text-sm text-ink/80 hover:bg-ink/5 transition-colors"
-            >
-              <span className="flex items-center gap-3">
-                <svg viewBox="0 0 24 24" className="w-4 h-4 fill-none stroke-current stroke-[1.5px]">
-                  <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path>
-                  <line x1="3" y1="6" x2="21" y2="6"></line>
-                  <path d="M16 10a4 4 0 0 1-8 0"></path>
-                </svg>
-                Shopping Cart
-              </span>
-              <span className="text-xs bg-sage text-canvas px-2 py-0.5 rounded-full font-semibold">0</span>
-            </button>
           </div>
         </div>
 
