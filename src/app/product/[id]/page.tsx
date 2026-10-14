@@ -8,15 +8,16 @@ import { ProductActions } from '@/components/product/ProductActions';
 import { ProductAccordion, AccordionItem } from '@/components/product/ProductAccordion';
 import { PremiumProductCard } from '@/components/collections2/PremiumProductCard';
 const CATEGORY_STRUCTURE: { label: string; members: string[] }[] = [
-  { label: 'Chair', members: ['Arm chair', 'Bar stool', 'Dining chair', 'Lounge Chair'] },
+  { label: 'Chair', members: ['Arm chair', 'Bar stool', 'Dining chair', 'Lounge Chair', 'Side Chair'] },
   { label: 'Modular & Sofa', members: ['Modular Sofa', 'Sofa'] },
   { label: 'Bedroom Collection', members: [] },
   { label: 'Table', members: ['Coffee Table', 'Night Table', 'Working Table', 'Side Table', 'Dining Table'] },
-  { label: 'Accessories', members: ['Clothes Rack'] },
   { label: 'Leg', members: ['Leg Dining Table', 'Leg Coffee Table', 'Leg side Table'] },
   { label: 'Stool & Ottoman', members: [] },
   { label: 'Shelf', members: [] },
   { label: 'Cabinet & More', members: [] },
+  { label: 'Dressing & Working', members: [] },
+  { label: 'Accessories', members: ['Clothes Rack'] },
 ];
 
 import { Product } from '@/components/collections2/PremiumProductCard';

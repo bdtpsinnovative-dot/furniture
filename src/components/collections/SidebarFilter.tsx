@@ -16,7 +16,7 @@ interface SidebarFilterProps {
 const CATEGORY_GROUPS = [
   {
     label: 'Chair',
-    items: ['Arm chair', 'Bar stool', 'Dining chair', 'Lounge Chair'],
+    items: ['Arm chair', 'Bar stool', 'Dining chair', 'Lounge Chair', 'Side Chair'],
   },
   {
     label: 'Modular & Sofa',
@@ -29,10 +29,6 @@ const CATEGORY_GROUPS = [
   {
     label: 'Table',
     items: ['Coffee Table', 'Night Table', 'Working Table', 'Side Table', 'Dining Table'],
-  },
-  {
-    label: 'Accessories',
-    items: ['Clothes Rack'],
   },
   {
     label: 'Leg',
@@ -49,6 +45,14 @@ const CATEGORY_GROUPS = [
   {
     label: 'Cabinet & More',
     items: [],
+  },
+  {
+    label: 'Dressing & Working',
+    items: [],
+  },
+  {
+    label: 'Accessories',
+    items: ['Clothes Rack'],
   },
 ];
 
